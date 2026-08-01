@@ -1,0 +1,17 @@
+{
+  "name": "property-plot-layout",
+  "version": "1.0.0",
+  "description": "Property Plot Layout Management Website - Maudai Development",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public/data',{recursive:true}); fs.readdirSync('data').forEach(f=>fs.copyFileSync('data/'+f,'public/data/'+f)); console.log('Build completed: data files synced to public/data');\""
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "serverless-http": "^4.0.0"
+  }
+}
