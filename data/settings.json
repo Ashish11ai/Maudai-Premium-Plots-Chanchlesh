@@ -1,0 +1,40 @@
+{
+  "overlay": {
+    "x": 0,
+    "z": 0,
+    "y": 0,
+    "scale": 1,
+    "rotation": 0,
+    "opacity": 0.75
+  },
+  "gmap": {
+    "lat": 22.088366355049406,
+    "lng": 78.87050461265576,
+    "zoom": 18,
+    "rotation": 0,
+    "scale": 11.3,
+    "mapType": "hybrid"
+  },
+  "titleBadge": {
+    "enabled": true,
+    "tag": "Approved Maudai Layout",
+    "title": "Maudai Premium Plots",
+    "address": "Village Maudai, Tehsil & District Chhindwara"
+  },
+  "adminAuth": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "users": {
+    "admin": {
+      "username": "admin",
+      "password": "admin123",
+      "role": "admin"
+    },
+    "Accountant": {
+      "username": "Accountant",
+      "password": "Accountant123",
+      "role": "accountant"
+    }
+  }
+}

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | Maudai Premium Plots</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/css/styles.css?v=7">
+</head>
+<body class="admin-body">
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-mark">M</div>
+        <h2>Admin Login</h2>
+        <p>Maudai Premium Plots Management</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+        </div>
+        <div id="login-error" class="form-error hidden">Invalid credentials</div>
+        <button type="submit" class="login-submit-btn">Sign In</button>
+      </form>
+      <a href="/" class="back-link">&larr; Back to site</a>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard (hidden until login) -->
+  <div id="admin-dashboard" class="hidden">
+    <!-- Admin Header -->
+    <header id="admin-header">
+      <div class="header-left">
+        <div class="logo-mark admin-mark">A</div>
+        <div class="header-title">
+          <h1>Admin Panel</h1>
+          <p class="header-subtitle">Plot Management Dashboard</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="admin-stats">
+          <div class="stat-pill available-pill">
+            <span class="stat-count" id="admin-count-available">0</span> Available
+          </div>
+          <div class="stat-pill sold-pill">
+            <span class="stat-count" id="admin-count-sold">0</span> Sold
+          </div>
+          <div class="stat-pill reserved-pill">
+            <span class="stat-count" id="admin-count-reserved">0</span> Reserved
+          </div>
+        </div>
+        <a href="/" class="view-site-btn" title="View Customer Site">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          View Site
+        </a>
+        <button id="btn-open-password-modal" class="view-site-btn" style="background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); margin-left: 6px;" title="Change Admin Username & Password">
+          🔑 Password
+        </button>
+        <button id="logout-btn" class="logout-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Admin Main Content -->
+    <main id="admin-main">
+      <!-- 3D Canvas & GMap Container -->
+      <div id="canvas-container">
+        <div id="admin-gmap-container" class="hidden"></div>
+        <canvas id="scene-canvas"></canvas>
+
+        <!-- Permanent Branding Badge & Share Button -->
+        <div class="designer-branding-container">
+          <a href="tel:9407357057" class="designer-branding-badge" title="Click to call 3D Designer: 9407357057">
+            <span class="branding-icon">📞</span> 3D Designed By <b>9407357057</b>
+          </a>
+          <button id="btn-admin-share-layout" class="designer-share-btn btn-share-action" title="Share this 3D Plot Layout">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>Share</span>
+          </button>
+        </div>
+
+        <!-- Floating GMap Admin Control Panel -->
+        <div id="gmap-admin-controls" class="gmap-admin-controls-panel hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0; font-size: 0.95rem; color: #38bdf8; font-weight: 800; display: flex; align-items: center; gap: 6px;">🗺️ Google Map Placement</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.7rem; background: rgba(16,185,129,0.2); color: #34d399; padding: 2px 8px; border-radius: 10px; font-weight: 600;">Live Satellite</span>
+              <button id="btn-toggle-gmap-panel" class="panel-collapse-btn" title="Collapse / Expand Panel">▼</button>
+              <button id="btn-close-gmap-panel" class="panel-collapse-btn" title="Close Panel" style="color: #f87171;">✕</button>
+            </div>
+          </div>
+          <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; line-height: 1.3;">In 2D map mode you can drag the red anchor pin 📍. In 3D/top view you can use the manual move, rotate, and scale controls below.</p>
+          
+          <!-- Location Search -->
+          <div class="gmap-control-group">
+            <label>Location Search</label>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="gmap-search-input" class="gmap-input" placeholder="Search town or lat,lng...">
+              <button id="btn-gmap-search" class="gmap-btn gmap-btn-secondary" style="width: auto; padding: 6px 10px;">Search</button>
+            </div>
+          </div>
+
+          <!-- Map Type -->
+          <div class="gmap-control-group">
+            <label>Satellite / Map Layer</label>
+            <select id="gmap-type-select" class="gmap-input">
+              <option value="satellite">Google Satellite (High Res)</option>
+              <option value="hybrid">Google Hybrid (Satellite + Roads)</option>
+              <option value="roadmap">Google Streets / Roadmap</option>
+              <option value="esri">Esri Imagery (Backup Satellite)</option>
+            </select>
+          </div>
+
+          <!-- Exact Lat & Lng -->
+          <div class="gmap-control-group">
+            <label>Anchor Coordinates (Lat, Lng)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <input type="number" id="gmap-lat-input" class="gmap-input" step="0.000001" placeholder="Latitude">
+              <input type="number" id="gmap-lng-input" class="gmap-input" step="0.000001" placeholder="Longitude">
+            </div>
+          </div>
+
+          <!-- Manual 3D Placement -->
+          <div class="gmap-control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="margin: 0;">Manual Move In 3D / Top View</label>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 0.72rem; color: #94a3b8;">Step</span>
+                <input type="number" id="gmap-move-step-input" class="gmap-input" step="0.1" min="0.1" max="20" value="1.0" style="width: 64px; padding: 2px 6px; text-align: center; font-weight: 700; color: #fbbf24;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 6px;">
+              <div></div>
+              <button class="nudge-btn" data-move-axis="z" data-move-dir="-1">Z-</button>
+              <div></div>
+              <button class="nudge-btn" data-move-axis="x" data-move-dir="-1">X-</button>
+              <button class="nudge-btn" data-move-axis="reset-label" disabled style="opacity: 0.55; cursor: default;">Move</button>
+              <button class="nudge-btn" data-move-axis="x" data-move-dir="1">X+</button>
+              <div></div>
+              <button class="nudge-btn" data-move-axis="z" data-move-dir="1">Z+</button>
+              <div></div>
+            </div>
+            <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px;">Use `X` and `Z` move buttons to slide the full layout while watching the 3D map.</div>
+          </div>
+
+          <!-- Layout Rotation -->
+          <div class="gmap-control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="margin: 0;">Layout Rotation</label>
+              <span id="gmap-rot-val" style="color: #60a5fa; font-weight: 700; font-size: 0.82rem;">0.0&deg;</span>
+            </div>
+            <input type="range" id="gmap-rot-slider" min="0" max="360" step="0.5" value="0" style="width: 100%; margin-top: 4px;">
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <button class="nudge-btn" data-nudge-rot="-1.0">-1&deg;</button>
+              <button class="nudge-btn" data-nudge-rot="-0.1">-0.1&deg;</button>
+              <button class="nudge-btn" data-nudge-rot="+0.1">+0.1&deg;</button>
+              <button class="nudge-btn" data-nudge-rot="+1.0">+1&deg;</button>
+            </div>
+          </div>
+
+          <!-- Layout Scale -->
+          <div class="gmap-control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label style="margin: 0;">Layout Scale Multiplier</label>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" id="gmap-scale-number-input" class="gmap-input" step="0.1" min="0.1" max="50.0" value="8.50" style="width: 75px; padding: 2px 6px; text-align: center; font-weight: 700; color: #34d399;">
+                <span style="color: #34d399; font-weight: 700; font-size: 0.82rem;">x</span>
+              </div>
+            </div>
+            <input type="range" id="gmap-scale-slider" min="0.1" max="30.0" step="0.1" value="8.5" style="width: 100%; margin-top: 6px;">
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <button class="nudge-btn" data-nudge-scale="-1.00">-1x</button>
+              <button class="nudge-btn" data-nudge-scale="-0.10">-0.1x</button>
+              <button class="nudge-btn" data-nudge-scale="+0.10">+0.1x</button>
+              <button class="nudge-btn" data-nudge-scale="+1.00">+1x</button>
+              <button class="nudge-btn" data-nudge-scale="+2.00">+2x</button>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;">
+              <button class="scale-preset-btn" data-scale-val="3.0">3.0x</button>
+              <button class="scale-preset-btn" data-scale-val="5.0">5.0x</button>
+              <button class="scale-preset-btn" data-scale-val="8.5">8.5x</button>
+              <button class="scale-preset-btn" data-scale-val="10.0">10.0x</button>
+              <button class="scale-preset-btn" data-scale-val="12.0">12.0x</button>
+              <button class="scale-preset-btn" data-scale-val="15.0">15.0x</button>
+            </div>
+          </div>
+
+
+
+          <!-- Actions -->
+          <div style="display: flex; gap: 8px; margin-top: 14px;">
+            <button id="btn-save-gmap-layout" class="gmap-btn gmap-btn-primary" style="flex: 1;">
+              💾 Save Placement
+            </button>
+            <button id="btn-reset-gmap-layout" class="gmap-btn gmap-btn-secondary" style="width: auto; padding: 6px 12px;" title="Reset placement to default Maudai center">
+              ↺ Reset
+            </button>
+          </div>
+        </div>
+        
+        <!-- View & Edit Controls -->
+        <div id="view-controls">
+          <button id="btn-view-gmap" class="view-btn" title="Google Map Mode">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          </button>
+          <button id="btn-toggle-gmap-placement-panel" class="view-btn" title="Show / Hide Google Map Placement Controls" style="font-size: 1.1rem;">
+            🗺️
+          </button>
+          <button id="btn-view-top" class="view-btn active" title="Top View">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+          </button>
+          <button id="btn-view-3d" class="view-btn" title="3D View">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </button>
+          <button id="btn-view-reset" class="view-btn" title="Reset View">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.64-8.51L1 10"/></svg>
+          </button>
+          <button id="btn-toggle-labels" class="view-btn active" title="Toggle Plot Labels ON/OFF">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/><circle cx="8" cy="18" r="1" fill="currentColor"/></svg>
+          </button>
+          <div class="view-divider"></div>
+          <button id="btn-toggle-edit" class="view-btn" title="Toggle 3D Edit Mode">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
+        </div>
+        <!-- Polygon Line Drawing Floating Toolbar -->
+        <div id="draw-polygon-toolbar" class="hidden" style="position: absolute; top: 20px; left: 360px; right: auto; transform: none; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); border: 2px solid #f59e0b; border-radius: 16px; padding: 10px 18px; align-items: center; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 2000; pointer-events: auto; max-width: calc(100vw - 390px); flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.4rem;">✏️</span>
+            <div>
+              <div style="font-weight: 800; color: #fef08a; font-size: 0.92rem; letter-spacing: 0.3px;">Tracing Plot Boundary (Line-by-Line)</div>
+              <div style="font-size: 0.75rem; color: #cbd5e1;">Click points on CAD layout map to draw plot lines</div>
+            </div>
+          </div>
+          <div style="background: rgba(245,158,11,0.2); color: #fde047; font-weight: 800; font-size: 0.85rem; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.4);">
+            Points: <span id="draw-point-count">0</span>
+          </div>
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <button id="btn-finish-polygon" style="background: #10b981; color: white; border: none; font-weight: 700; font-size: 0.82rem; padding: 7px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(16,185,129,0.4);">
+              ✓ Finish & Extrude Plot (Enter)
+            </button>
+            <button id="btn-cancel-polygon" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); font-weight: 600; font-size: 0.82rem; padding: 7px 14px; border-radius: 10px; cursor: pointer;">
+              ✕ Cancel (Esc)
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D Layout Editor Tools (Hidden by default) -->
+        <div id="layout-editor-tools" class="admin-panel-floating hidden" style="top: 70px; left: 16px; right: auto; width: 330px; max-height: calc(100vh - 90px); overflow-y: auto; z-index: 100;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin: 0;">3D Layout Editor</h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="badge-edit" style="background: rgba(59,130,246,0.2); color: #60a5fa; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.3);">Active</span>
+              <button id="btn-toggle-editor-panel" class="panel-collapse-btn" title="Collapse / Expand Panel">▼</button>
+            </div>
+          </div>
+          <p class="editor-help" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">Click any road, wall, amenity, or plot in 3D or select it from the list below to edit/delete.</p>
+          
+          <!-- Selected Object Card -->
+          <div id="selected-asset-card" style="background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 10px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Currently Selected</div>
+            <div id="selected-asset-name" style="font-size: 0.95rem; font-weight: 600; color: #38bdf8; margin-bottom: 6px;">None (Click an asset in 3D or select below)</div>
+            
+            <select id="select-asset-dropdown" style="width: 100%; background: #0f172a; border: 1px solid rgba(59,130,246,0.6); color: #38bdf8; padding: 6px 8px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; margin-bottom: 8px; cursor: pointer;">
+              <option value="">🎯 Select Plot / Road / Wall / Amenity...</option>
+            </select>
+
+            <!-- Plot Boundary Approval Button -->
+            <div id="plot-approval-container" style="margin-bottom: 10px; display: flex; gap: 6px;">
+              <button id="btn-approve-plot" style="flex: 1; background: #10b981; color: white; border: none; font-weight: 700; font-size: 0.82rem; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
+                ✓ Approve & Create 3D Polygon
+              </button>
+              <button id="btn-approve-all-plots" style="background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); font-weight: 700; font-size: 0.78rem; padding: 8px 10px; border-radius: 8px; cursor: pointer;" title="Approve All 96 Plots">
+                Approve All
+              </button>
+            </div>
+            
+            <!-- Real-time Dimension & Vertex Controls -->
+            <div id="selected-asset-dims" style="margin-top: 8px; font-size: 0.78rem; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
+              <div style="display: flex; justify-content: space-between; color: #cbd5e1;">
+                <span>Area: <b id="asset-area-val" style="color: #4ade80;">-</b> sq.ft</span>
+                <span>Dim: <b id="asset-dim-str" style="color: #60a5fa;">-</b></span>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Width (M)</label>
+                  <input id="input-asset-w" type="number" step="0.1" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Depth/Len (M)</label>
+                  <input id="input-asset-d" type="number" step="0.1" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Height (M)</label>
+                  <input id="input-asset-h" type="number" step="0.05" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; margin-top: 4px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Rotate (°)</label>
+                  <input id="input-asset-rot" type="number" step="1" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Pos X (M)</label>
+                  <input id="input-asset-x" type="number" step="0.1" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #94a3b8; display: block; margin-bottom: 2px;">Pos Z (M)</label>
+                  <input id="input-asset-z" type="number" step="0.1" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 0.78rem;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Text Label Editor Inputs (Shown when a Text Label is selected) -->
+            <div id="text-label-editor-group" class="hidden" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(56, 189, 248, 0.3);">
+              <label style="font-size: 0.7rem; color: #38bdf8; font-weight: 700; display: block; margin-bottom: 3px;">🏷️ Edit Custom Label Text</label>
+              <input id="input-label-text" type="text" placeholder="e.g. Main Entrance 30 Ft Road" style="width: 100%; background: #0f172a; border: 1px solid #38bdf8; color: #fff; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">
+              
+              <div style="display: flex; gap: 6px;">
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #cbd5e1; display: block; margin-bottom: 2px;">Background Color</label>
+                  <input id="input-label-bgcolor" type="color" value="#1e3a8a" style="width: 100%; height: 28px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-size: 0.68rem; color: #cbd5e1; display: block; margin-bottom: 2px;">Text Color</label>
+                  <input id="input-label-textcolor" type="color" value="#ffffff" style="width: 100%; height: 28px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">
+                </div>
+              </div>
+            </div>
+
+            <button id="btn-delete-asset" class="delete-btn" style="width: 100%; margin-top: 8px; background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; opacity: 0.5;" disabled>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Delete Selected Item
+            </button>
+          </div>
+
+          <div class="transform-modes" style="display: flex; gap: 4px; margin-bottom: 12px;">
+            <button id="btn-mode-translate" class="action-btn active" style="flex: 1; padding: 6px 3px; font-size: 0.75rem;" title="Move Mode (W)">Move (W)</button>
+            <button id="btn-mode-scale" class="action-btn" style="flex: 1; padding: 6px 3px; font-size: 0.75rem;" title="Scale Mode (E)">Scale (E)</button>
+            <button id="btn-mode-rotate" class="action-btn" style="flex: 1; padding: 6px 3px; font-size: 0.75rem;" title="Rotate Mode (R)">Rotate (R)</button>
+            <button id="btn-mode-vertex" class="action-btn" style="flex: 1.2; padding: 6px 3px; font-size: 0.75rem; background: rgba(234,179,8,0.2); color: #fde047; border: 1px solid rgba(234,179,8,0.4);" title="Edit Vertex Corner Handles (T)">🎯 Vertices (T)</button>
+          </div>
+          
+          <div class="editor-actions" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <button id="btn-draw-polygon" class="save-btn" style="background: linear-gradient(135deg, #eab308 0%, #d97706 100%); color: #0f172a; padding: 9px; font-size: 0.84rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 10px rgba(234,179,8,0.3);">✏️ Trace/Draw Plot Polygon (Line-by-Line)</button>
+            <button id="btn-add-plot" class="save-btn" style="background: #10b981; padding: 8px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">📐 + Add Rectangular Plot</button>
+            <button id="btn-add-text-label" class="save-btn" style="background: #0284c7; padding: 8px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🏷️ + Add Custom Text Label</button>
+            <button id="btn-add-amenity" class="save-btn" style="background: #8b5cf6; padding: 8px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🏛️ + Add Amenity (Park, Gate, Clubhouse, etc.)</button>
+            <button id="btn-add-road" class="save-btn" style="background: var(--accent-blue); padding: 8px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🛣️ + Add New Road</button>
+            <button id="btn-add-wall" class="save-btn" style="background: #e11d48; padding: 8px; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">🧱 + Add Layout Covered Boundary Wall</button>
+            <button id="btn-save-layout" class="save-btn" style="background: var(--accent-green); padding: 9px; font-weight: 700; margin-top: 4px;">💾 Save Layout Changes</button>
+          </div>
+
+          <!-- Placed Layout Items Manager -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px;">Placed Layout Items</div>
+              <span id="asset-count-badge" style="font-size: 0.7rem; background: #334155; color: #94a3b8; padding: 1px 6px; border-radius: 10px;">0 Items</span>
+            </div>
+            <div id="placed-assets-list" style="max-height: 160px; overflow-y: auto; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 4px;">
+              <div style="padding: 10px; text-align: center; color: #64748b; font-size: 0.78rem;">No roads, walls, or amenities placed yet</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px; font-size: 0.72rem; color: #64748b; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
+            Keyboard Shortcut: Select object & press <kbd style="background: #334155; color: #f1f5f9; padding: 1px 4px; border-radius: 3px;">Del</kbd> / <kbd style="background: #334155; color: #f1f5f9; padding: 1px 4px; border-radius: 3px;">Backspace</kbd>
+          </div>
+        </div>
+
+        <!-- Admin Overlay Controls (Legacy - hidden) -->
+        <div id="overlay-controls" class="admin-panel-floating hidden">
+          <h3>Align Layout on Land</h3>
+          <div class="control-row">
+            <label>Position X</label>
+            <div class="nudge-group">
+              <button class="nudge-btn" id="nudge-x-left" title="Move Left">&larr;</button>
+              <input type="range" id="overlay-pos-x" min="-100" max="100" value="0" step="0.5">
+              <button class="nudge-btn" id="nudge-x-right" title="Move Right">&rarr;</button>
+            </div>
+            <span id="overlay-pos-x-val">0</span>
+          </div>
+          <div class="control-row">
+            <label>Position Z</label>
+            <div class="nudge-group">
+              <button class="nudge-btn" id="nudge-z-up" title="Move North">&uarr;</button>
+              <input type="range" id="overlay-pos-z" min="-100" max="100" value="0" step="0.5">
+              <button class="nudge-btn" id="nudge-z-down" title="Move South">&darr;</button>
+            </div>
+            <span id="overlay-pos-z-val">0</span>
+          </div>
+          <div class="control-row">
+            <label>Scale</label>
+            <input type="range" id="overlay-scale" min="20" max="300" value="100" step="1">
+            <span id="overlay-scale-val">100%</span>
+          </div>
+          <div class="control-row">
+            <label>Rotation</label>
+            <input type="range" id="overlay-rotation" min="-180" max="180" value="0" step="1">
+            <span id="overlay-rotation-val">0&deg;</span>
+          </div>
+          <div class="control-row">
+            <label>Opacity</label>
+            <input type="range" id="overlay-opacity" min="0" max="100" value="70" step="1">
+            <span id="overlay-opacity-val">70%</span>
+          </div>
+          <div class="control-actions">
+            <button id="reset-overlay-btn" class="reset-overlay-btn" title="Reset to Center">Reset</button>
+            <button id="save-overlay-btn" class="save-btn">Save Position</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Sidebar -->
+      <aside id="sidebar">
+        <!-- Edit Plot Panel -->
+        <div id="edit-plot-panel" class="panel hidden">
+          <div class="panel-header">
+            <h2 id="edit-plot-title">Edit Plot</h2>
+            <button id="close-edit-panel" class="close-btn">&times;</button>
+          </div>
+          <div class="edit-form">
+            <div class="form-group">
+              <label>Plot Number</label>
+              <div class="info-value" id="edit-plot-number">-</div>
+            </div>
+            <div class="form-group">
+              <label for="edit-width">Width (ft)</label>
+              <input type="number" id="edit-width" step="any" placeholder="Width in feet (e.g. 30.0)">
+            </div>
+            <div class="form-group">
+              <label for="edit-depth">Length / Depth (ft)</label>
+              <input type="number" id="edit-depth" step="any" placeholder="Length in feet (e.g. 111.0)">
+            </div>
+            <div class="form-group">
+              <label for="edit-area">Area (sq.ft.)</label>
+              <input type="number" id="edit-area" step="any" placeholder="Area in sq.ft. (e.g. 3364.83)">
+            </div>
+            <div class="form-group">
+              <label for="edit-dimensions-str">Dimension Label / String</label>
+              <input type="text" id="edit-dimensions-str" placeholder="e.g. 30'-0&quot; &times; 111'-0&quot;">
+            </div>
+            <div class="form-group">
+              <label for="edit-status">Status</label>
+              <div class="status-toggle">
+                <button class="status-btn available" data-status="available">Available</button>
+                <button class="status-btn sold" data-status="sold">Sold</button>
+                <button class="status-btn reserved" data-status="reserved">Reserved</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="edit-price">Price (&#8377;)</label>
+              <input type="number" id="edit-price" placeholder="Enter price" min="0">
+            </div>
+            <div class="form-group">
+              <label for="edit-notes">Notes</label>
+              <textarea id="edit-notes" placeholder="Add notes..." rows="3"></textarea>
+            </div>
+            <button id="save-plot-btn" class="save-btn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </button>
+          </div>
+        </div>
+
+        <!-- Plot List -->
+        <div id="plot-list-panel" class="panel">
+          <div class="panel-header">
+            <h2>All Plots</h2>
+            <div class="bulk-actions">
+              <select id="bulk-status-select">
+                <option value="">Bulk Action...</option>
+                <option value="available">Mark Available</option>
+                <option value="sold">Mark Sold</option>
+                <option value="reserved">Mark Reserved</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="available">Available</button>
+            <button class="filter-btn" data-filter="sold">Sold</button>
+            <button class="filter-btn" data-filter="reserved">Reserved</button>
+          </div>
+          <div class="search-bar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-input" placeholder="Search plot number...">
+          </div>
+          <div id="plot-list" class="plot-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Change Password Modal -->
+  <div id="change-password-modal" class="modal-overlay hidden" style="backdrop-filter: blur(16px); background: rgba(15,23,42,0.88); z-index: 9999;">
+    <div class="login-card" style="position: relative; max-width: 420px; width: 90%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: #fde047; font-weight: 800;">🔑 Change Admin Password</h3>
+        <button id="close-password-modal" class="close-btn" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <form id="change-password-form">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">Current Password</label>
+          <input type="password" id="current-password-input" class="gmap-input" required placeholder="Enter current password" style="width: 100%;">
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">New Admin Username</label>
+          <input type="text" id="new-username-input" class="gmap-input" required placeholder="e.g. admin" value="admin" style="width: 100%;">
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">New Password</label>
+          <input type="password" id="new-password-input" class="gmap-input" required placeholder="Enter new password (min 4 chars)" style="width: 100%;">
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">Confirm New Password</label>
+          <input type="password" id="confirm-password-input" class="gmap-input" required placeholder="Re-enter new password" style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" id="cancel-password-btn" class="gmap-btn gmap-btn-secondary" style="width: auto; padding: 8px 16px;">Cancel</button>
+          <button type="submit" id="save-password-btn" class="gmap-btn gmap-btn-primary" style="width: auto; padding: 8px 20px; background: #38bdf8; color: #0f172a; font-weight: 700;">Update Credentials</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet & Google Maps CDN -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.125.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/three@0.125.2/examples/js/controls/TransformControls.js"></script>
+  <script src="/js/plotData.js?v=6"></script>
+  <script src="/js/scene3d.js?v=6"></script>
+  <script src="/js/gmap.js?v=6"></script>
+  <script src="/js/admin.js?v=6"></script>
+</body>
+</html>

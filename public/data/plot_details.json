@@ -1,0 +1,677 @@
+{
+  "plots": {
+    "1": {
+      "area": 3364.83,
+      "dimensions_str": "30'-1\" × 100'",
+      "width_ft": 30.1,
+      "depth_ft": 111.8,
+      "facing_road": ""
+    },
+    "2": {
+      "area": 3330.27,
+      "dimensions_str": "30'-0\" × 119'-3\"",
+      "width_ft": 30,
+      "depth_ft": 111,
+      "facing_road": ""
+    },
+    "3": {
+      "area": 3930.91,
+      "dimensions_str": "30' × 141'-1\"",
+      "width_ft": 30,
+      "depth_ft": 131,
+      "facing_road": ""
+    },
+    "4": {
+      "area": 3000,
+      "dimensions_str": "30' × 100'",
+      "width_ft": 30,
+      "depth_ft": 100,
+      "facing_road": ""
+    },
+    "5": {
+      "area": 3000,
+      "dimensions_str": "30' × 100'",
+      "width_ft": 50,
+      "depth_ft": 60,
+      "facing_road": ""
+    },
+    "6": {
+      "area": 2763.76,
+      "dimensions_str": "31'-10\" x 100'-2\"",
+      "width_ft": 46,
+      "depth_ft": 60,
+      "facing_road": ""
+    },
+    "7": {
+      "area": 1561.96,
+      "dimensions_str": "61' x 16'-1\" x 47'-3\"",
+      "width_ft": 30,
+      "depth_ft": 52.1,
+      "facing_road": ""
+    },
+    "8": {
+      "area": 1703.73,
+      "dimensions_str": "34'-4\" x 66'-5\"",
+      "width_ft": 30,
+      "depth_ft": 56.8,
+      "facing_road": ""
+    },
+    "9": {
+      "area": 1250,
+      "dimensions_str": "50' x 25'",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "10": {
+      "area": 1250,
+      "dimensions_str": "25' x 50'",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "11": {
+      "area": 921.08,
+      "dimensions_str": "20' -5\" x 50'",
+      "width_ft": 20,
+      "depth_ft": 46.1,
+      "facing_road": ""
+    },
+    "12": {
+      "area": 2202.74,
+      "dimensions_str": "29' -9\" x 64'-6\" x 71'-11\"",
+      "width_ft": 30,
+      "depth_ft": 73.4,
+      "facing_road": ""
+    },
+    "13": {
+      "area": 1548.62,
+      "dimensions_str": "25' x 60'",
+      "width_ft": 30,
+      "depth_ft": 51.6,
+      "facing_road": ""
+    },
+    "14": {
+      "area": 1800,
+      "dimensions_str": "30\" × 60\"",
+      "width_ft": 30,
+      "depth_ft": 60,
+      "facing_road": ""
+    },
+    "15": {
+      "area": 1255.51,
+      "dimensions_str": "34'-8\" x 34 -2\" x 39'-1 \"",
+      "width_ft": 25,
+      "depth_ft": 50.2,
+      "facing_road": ""
+    },
+    "16": {
+      "area": 1029.04,
+      "dimensions_str": "25' x 39'-1\" x 43'-3\"",
+      "width_ft": 25,
+      "depth_ft": 41.2,
+      "facing_road": ""
+    },
+    "17": {
+      "area": 1134.31,
+      "dimensions_str": "25' x 43'-3\" x 47'-6\"",
+      "width_ft": 25,
+      "depth_ft": 45.4,
+      "facing_road": ""
+    },
+    "18": {
+      "area": 1239.69,
+      "dimensions_str": "25' x 47'-6\" x 51' -9\"",
+      "width_ft": 25,
+      "depth_ft": 49.6,
+      "facing_road": ""
+    },
+    "19": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "20": {
+      "area": 1298.46,
+      "dimensions_str": "30'-3\" x 8' 6\"",
+      "width_ft": 25,
+      "depth_ft": 51.9,
+      "facing_road": ""
+    },
+    "21": {
+      "area": 1895.33,
+      "dimensions_str": "33'-6\" × 50'",
+      "width_ft": 30,
+      "depth_ft": 63.2,
+      "facing_road": ""
+    },
+    "22": {
+      "area": 1500,
+      "dimensions_str": "30' × 50'",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "23": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "24": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "25": {
+      "area": 1074.68,
+      "dimensions_str": "25'-9\" × 20'",
+      "width_ft": 25,
+      "depth_ft": 43,
+      "facing_road": ""
+    },
+    "26": {
+      "area": 1674.23,
+      "dimensions_str": "29'-3\" x 50'",
+      "width_ft": 30,
+      "depth_ft": 55.8,
+      "facing_road": ""
+    },
+    "27": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "28": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "29": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "30": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "31": {
+      "area": 1000,
+      "dimensions_str": "20'-0\" × 50'-0\"",
+      "width_ft": 20,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "32": {
+      "area": 1089.86,
+      "dimensions_str": "25'-11\" × 14'",
+      "width_ft": 20,
+      "depth_ft": 54.5,
+      "facing_road": ""
+    },
+    "33": {
+      "area": 3054.39,
+      "dimensions_str": "41'-11\" × 65'-9\"",
+      "width_ft": 50,
+      "depth_ft": 61.1,
+      "facing_road": ""
+    },
+    "34": {
+      "area": 2236.87,
+      "dimensions_str": "35'-4\"'× 31'",
+      "width_ft": 40,
+      "depth_ft": 55.9,
+      "facing_road": ""
+    },
+    "35": {
+      "area": 1750,
+      "dimensions_str": "35'-0\" × 50'-0\"",
+      "width_ft": 35,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "36": {
+      "area": 1494.69,
+      "dimensions_str": "30'-0\" × 50'-2\"",
+      "width_ft": 30,
+      "depth_ft": 49.8,
+      "facing_road": ""
+    },
+    "37": {
+      "area": 1485.43,
+      "dimensions_str": "30'-0\" × 49'-6\"",
+      "width_ft": 30,
+      "depth_ft": 49.5,
+      "facing_road": ""
+    },
+    "38": {
+      "area": 1477.57,
+      "dimensions_str": "30'-0\" × 49'-3\"",
+      "width_ft": 30,
+      "depth_ft": 49.3,
+      "facing_road": ""
+    },
+    "39": {
+      "area": 1465.73,
+      "dimensions_str": "30'-0\" × 48'-10\"",
+      "width_ft": 30,
+      "depth_ft": 48.9,
+      "facing_road": ""
+    },
+    "40": {
+      "area": 1463.26,
+      "dimensions_str": "30'-0\" × 48'-9\"",
+      "width_ft": 30,
+      "depth_ft": 48.8,
+      "facing_road": ""
+    },
+    "41": {
+      "area": 1456.15,
+      "dimensions_str": "30'-0\" × 48'-6\"",
+      "width_ft": 30,
+      "depth_ft": 48.5,
+      "facing_road": ""
+    },
+    "42": {
+      "area": 1449.05,
+      "dimensions_str": "30'-0\" × 48'-5\"",
+      "width_ft": 30,
+      "depth_ft": 48.3,
+      "facing_road": ""
+    },
+    "43": {
+      "area": 1441.95,
+      "dimensions_str": "30'-0\" × 48'-1\"",
+      "width_ft": 30,
+      "depth_ft": 48.1,
+      "facing_road": ""
+    },
+    "44": {
+      "area": 1196.63,
+      "dimensions_str": "25'-0\" × 47'-10\"",
+      "width_ft": 25,
+      "depth_ft": 47.9,
+      "facing_road": ""
+    },
+    "45": {
+      "area": 1191.57,
+      "dimensions_str": "25'-0\" × 47'-8\"",
+      "width_ft": 25,
+      "depth_ft": 47.7,
+      "facing_road": ""
+    },
+    "46": {
+      "area": 1186.41,
+      "dimensions_str": "25'-0\" × 47'-7\"",
+      "width_ft": 25,
+      "depth_ft": 47.5,
+      "facing_road": ""
+    },
+    "47": {
+      "area": 1181.13,
+      "dimensions_str": "25'-0\" × 47'-6\"",
+      "width_ft": 25,
+      "depth_ft": 47.2,
+      "facing_road": ""
+    },
+    "48": {
+      "area": 1175.97,
+      "dimensions_str": "25'-0\" × 47'-0\"",
+      "width_ft": 25,
+      "depth_ft": 47,
+      "facing_road": ""
+    },
+    "49": {
+      "area": 1177.9,
+      "dimensions_str": "25'-0\" × 47'-5\"",
+      "width_ft": 25,
+      "depth_ft": 47.1,
+      "facing_road": ""
+    },
+    "50": {
+      "area": 1187.81,
+      "dimensions_str": "25'-0\" × 47'-4\"",
+      "width_ft": 25,
+      "depth_ft": 47.5,
+      "facing_road": ""
+    },
+    "51": {
+      "area": 1197.71,
+      "dimensions_str": "25'-0\" × 47'-11\"",
+      "width_ft": 25,
+      "depth_ft": 47.9,
+      "facing_road": ""
+    },
+    "52": {
+      "area": 1207.61,
+      "dimensions_str": "25'-0\" × 48'-4\"",
+      "width_ft": 25,
+      "depth_ft": 48.3,
+      "facing_road": ""
+    },
+    "53": {
+      "area": 1217.52,
+      "dimensions_str": "25'-0\" × 48'-8\"",
+      "width_ft": 25,
+      "depth_ft": 48.7,
+      "facing_road": ""
+    },
+    "54": {
+      "area": 981.78,
+      "dimensions_str": "20'-0\" × 49'-1\"",
+      "width_ft": 20,
+      "depth_ft": 49.1,
+      "facing_road": ""
+    },
+    "55": {
+      "area": 988.14,
+      "dimensions_str": "20'-0\" × 49'-5\"",
+      "width_ft": 20,
+      "depth_ft": 49.4,
+      "facing_road": ""
+    },
+    "56": {
+      "area": 994.38,
+      "dimensions_str": "20'-0\" × 49'-9\"",
+      "width_ft": 20,
+      "depth_ft": 49.7,
+      "facing_road": ""
+    },
+    "57": {
+      "area": 995.67,
+      "dimensions_str": "20'-0\" × 49'-10\"",
+      "width_ft": 20,
+      "depth_ft": 49.8,
+      "facing_road": ""
+    },
+    "58": {
+      "area": 969.51,
+      "dimensions_str": "20'-0\" × 48'-6\"",
+      "width_ft": 20,
+      "depth_ft": 48.5,
+      "facing_road": ""
+    },
+    "59": {
+      "area": 939.16,
+      "dimensions_str": "20'-0\" × 47'-0\"",
+      "width_ft": 20,
+      "depth_ft": 47,
+      "facing_road": ""
+    },
+    "60": {
+      "area": 908.8,
+      "dimensions_str": "20'-0\" × 44'-8\"",
+      "width_ft": 20,
+      "depth_ft": 45.4,
+      "facing_road": ""
+    },
+    "61": {
+      "area": 1406.64,
+      "dimensions_str": "31'-1\" × 44'-8\" x 42' -2\"",
+      "width_ft": 25,
+      "depth_ft": 56.3,
+      "facing_road": ""
+    },
+    "62": {
+      "area": 1746.57,
+      "dimensions_str": "36'-6\" × 50'-1\"",
+      "width_ft": 30,
+      "depth_ft": 58.2,
+      "facing_road": ""
+    },
+    "63": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "64": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "65": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "66": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "67": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "68": {
+      "area": 1384.04,
+      "dimensions_str": "27'-8\" × 50'",
+      "width_ft": 25,
+      "depth_ft": 55.4,
+      "facing_road": ""
+    },
+    "69": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "70": {
+      "area": 1590,
+      "dimensions_str": "30'-0\" × 53'-0\"",
+      "width_ft": 30,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "71": {
+      "area": 1466.7,
+      "dimensions_str": "27' × 53'",
+      "width_ft": 30,
+      "depth_ft": 48.9,
+      "facing_road": ""
+    },
+    "72": {
+      "area": 1325,
+      "dimensions_str": "25'-0\" × 53'-0\"",
+      "width_ft": 25,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "73": {
+      "area": 1325,
+      "dimensions_str": "25'-0\" × 53'-0\"",
+      "width_ft": 25,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "74": {
+      "area": 1325,
+      "dimensions_str": "25'-0\" × 53'-0\"",
+      "width_ft": 25,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "75": {
+      "area": 1325,
+      "dimensions_str": "25'-0\" × 53'-0\"",
+      "width_ft": 25,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "76": {
+      "area": 1325,
+      "dimensions_str": "25'-0\" × 53'-0\"",
+      "width_ft": 25,
+      "depth_ft": 53,
+      "facing_road": ""
+    },
+    "77": {
+      "area": 1677.89,
+      "dimensions_str": "30'-0\" × 53'-1\"",
+      "width_ft": 30,
+      "depth_ft": 55.9,
+      "facing_road": ""
+    },
+    "78": {
+      "area": 1886.82,
+      "dimensions_str": "38'-2\" × 50'",
+      "width_ft": 30,
+      "depth_ft": 62.9,
+      "facing_road": ""
+    },
+    "79": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "80": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "81": {
+      "area": 1871.97,
+      "dimensions_str": "37'-4\" × 50'",
+      "width_ft": 30,
+      "depth_ft": 62.4,
+      "facing_road": ""
+    },
+    "82": {
+      "area": 1367.67,
+      "dimensions_str": "26'-11\" × 50'",
+      "width_ft": 25,
+      "depth_ft": 54.7,
+      "facing_road": ""
+    },
+    "83": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "84": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "85": {
+      "area": 1368.53,
+      "dimensions_str": "27'-5\" × 50'",
+      "width_ft": 25,
+      "depth_ft": 54.7,
+      "facing_road": ""
+    },
+    "86": {
+      "area": 1476.28,
+      "dimensions_str": "19' × 50'",
+      "width_ft": 30,
+      "depth_ft": 49.2,
+      "facing_road": ""
+    },
+    "87": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "88": {
+      "area": 1500,
+      "dimensions_str": "30'-0\" × 50'-0\"",
+      "width_ft": 30,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "89": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "90": {
+      "area": 1310.95,
+      "dimensions_str": "38' × 19'",
+      "width_ft": 25,
+      "depth_ft": 52.4,
+      "facing_road": ""
+    },
+    "91": {
+      "area": 1617.72,
+      "dimensions_str": "56'-7\" × 19'-6\"",
+      "width_ft": 30,
+      "depth_ft": 53.9,
+      "facing_road": ""
+    },
+    "92": {
+      "area": 1250,
+      "dimensions_str": "25'-0\" × 50'-0\"",
+      "width_ft": 25,
+      "depth_ft": 50,
+      "facing_road": ""
+    },
+    "93": {
+      "area": 2106.3,
+      "dimensions_str": "40'-2\" × 50'",
+      "width_ft": 40,
+      "depth_ft": 52.7,
+      "facing_road": ""
+    },
+    "94": {
+      "area": 2009.32,
+      "dimensions_str": "43'-1\" × 45'",
+      "width_ft": 40,
+      "depth_ft": 50.2,
+      "facing_road": ""
+    },
+    "95": {
+      "area": 3491.52,
+      "dimensions_str": "68'-7\" x 40'-9\" x  27'-4\" x 28'-10\"",
+      "width_ft": 50,
+      "depth_ft": 69.8,
+      "facing_road": ""
+    },
+    "96": {
+      "area": 3310.04,
+      "dimensions_str": "33'-1 x70'-8\" x 32'-9\"",
+      "width_ft": 50,
+      "depth_ft": 66.2,
+      "facing_road": ""
+    }
+  },
+  "roads": []
+}
