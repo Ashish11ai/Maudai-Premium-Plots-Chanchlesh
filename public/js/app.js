@@ -144,6 +144,12 @@
       if (settings && settings.gmap && gmapManager) {
         gmapManager.setPlacementSettings(settings.gmap);
       }
+      if (settings && settings.gmap && settings.gmap.defaultView) {
+        setViewMode(settings.gmap.defaultView);
+        if (settings.gmap.defaultView === '3d' && scene) {
+          scene.set3DView();
+        }
+      }
     } catch (e) {
       console.error('Failed to load overlay settings:', e);
     }

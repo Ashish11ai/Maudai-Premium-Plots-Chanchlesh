@@ -211,8 +211,9 @@
       });
     }
 
-    // Default to Google Map mode in Admin
-    setViewMode('gmap');
+    // Default to 3D Google Map View in Admin
+    setViewMode('3d');
+    if (scene) scene.set3DView();
   }
   
   // --- API Calls ---
@@ -253,6 +254,12 @@
       if (settings.gmap && gmapManager) {
         gmapManager.setPlacementSettings(settings.gmap);
         syncGMapUI();
+      }
+      if (settings.gmap && settings.gmap.defaultView) {
+        setViewMode(settings.gmap.defaultView);
+        if (settings.gmap.defaultView === '3d' && scene) {
+          scene.set3DView();
+        }
       }
       if (settings.titleBadge) {
         applyTitleBadgeSettings(settings.titleBadge);

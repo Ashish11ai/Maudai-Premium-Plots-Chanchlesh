@@ -464,23 +464,18 @@ app.post('/api/save-layout', requireAdminOnly, (req, res) => {
           const rot = p.rot || 0;
           const hw = (p.w || 1.48) / 2;
           const hd = (p.h || 2.97) / 2;
-          if (Math.abs(rot) > 0.01) {
-            const cr = Math.cos(rot);
-            const sr = Math.sin(rot);
-            plotPolygons[id] = [
-              [Number((cx - hw*cr + hd*sr).toFixed(4)), Number((cz - hw*sr - hd*cr).toFixed(4))],
-              [Number((cx + hw*cr + hd*sr).toFixed(4)), Number((cz + hw*sr - hd*cr).toFixed(4))],
-              [Number((cx + hw*cr - hd*sr).toFixed(4)), Number((cz + hw*sr + hd*cr).toFixed(4))],
-              [Number((cx - hw*cr - hd*sr).toFixed(4)), Number((cz - hw*sr + hd*cr).toFixed(4))]
-            ];
-          } else {
-            plotPolygons[id] = [
-              [Number((cx - hw).toFixed(4)), Number((cz - hd).toFixed(4))],
-              [Number((cx + hw).toFixed(4)), Number((cz - hd).toFixed(4))],
-              [Number((cx + hw).toFixed(4)), Number((cz + hd).toFixed(4))],
-              [Number((cx - hw).toFixed(4)), Number((cz + hd).toFixed(4))]
-            ];
-          }
+          const cos = Math.cos(rot);
+          const sin = Math.sin(rot);
+          const offsets = [
+            [-hw, -hd],
+            [ hw, -hd],
+            [ hw,  hd],
+            [-hw,  hd]
+          ];
+          plotPolygons[id] = offsets.map(([dx, dz]) => [
+            Number((cx + dx * cos + dz * sin).toFixed(4)),
+            Number((cz - dx * sin + dz * cos).toFixed(4))
+          ]);
         }
 
         // Update plots.json entry

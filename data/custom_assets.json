@@ -5,7 +5,7 @@
     "subType": "textLabel",
     "name": "Maudai Premium Plots\r\nVillage Maudai, Tehsil & District Chhindwara",
     "text": "Maudai Premium Plots\r\nVillage Maudai, Tehsil & District Chhindwara",
-    "bgColor": "#0284c7",
+    "bgColor": "rgba(2, 132, 199, 0.22)",
     "textColor": "#ffffff",
     "w": 37.2579,
     "h": 1740.4913,

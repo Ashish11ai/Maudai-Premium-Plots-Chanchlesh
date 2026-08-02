@@ -2560,14 +2560,27 @@ class PlotScene {
     const cw = canvas.width;
     const ch = canvas.height;
 
-    // Rounded background box
-    ctx.fillStyle = labelData.bgColor || '#0284c7';
+    // Rounded semi-transparent glass background box
+    const rawBg = labelData.bgColor || '#0284c7';
+    let glassBg = 'rgba(2, 132, 199, 0.45)';
+    if (rawBg.startsWith('#')) {
+      let hex = rawBg.slice(1);
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      const r = parseInt(hex.substring(0, 2), 16) || 2;
+      const g = parseInt(hex.substring(2, 4), 16) || 132;
+      const b = parseInt(hex.substring(4, 6), 16) || 199;
+      glassBg = `rgba(${r}, ${g}, ${b}, 0.45)`;
+    } else if (rawBg.startsWith('rgba')) {
+      glassBg = rawBg.replace(/[\d\.]+\)$/, '0.45)');
+    }
+
+    ctx.fillStyle = glassBg;
     ctx.beginPath();
     ctx.roundRect(8, 8, cw - 16, ch - 16, 24);
     ctx.fill();
 
-    // Crisp white border
-    ctx.strokeStyle = '#ffffff';
+    // Crisp subtle border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.lineWidth = 10;
     ctx.beginPath();
     ctx.roundRect(14, 14, cw - 28, ch - 28, 18);
@@ -2577,8 +2590,8 @@ class PlotScene {
     ctx.fillStyle = labelData.textColor || '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 10;
     
     ctx.font = '900 64px "Segoe UI", Arial, sans-serif';
     
@@ -2596,7 +2609,8 @@ class PlotScene {
       map: texture,
       color: 0xffffff,
       transparent: true,
-      depthTest: true
+      depthTest: true,
+      depthWrite: false
     });
 
     const sprite = new THREE.Sprite(spriteMat);

@@ -13,7 +13,8 @@
     "zoom": 18,
     "rotation": 0,
     "scale": 11.3,
-    "mapType": "hybrid"
+    "mapType": "hybrid",
+    "defaultView": "3d"
   },
   "titleBadge": {
     "enabled": true,

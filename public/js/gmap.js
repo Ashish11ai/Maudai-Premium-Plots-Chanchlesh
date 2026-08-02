@@ -217,23 +217,23 @@ class GMapManager {
         if (ast.assetType === 'textLabel' || ast.subType === 'textLabel') {
           const latLng = this.localToLatLng(ast.x || 0, ast.z || 0);
           const rawBg = ast.bgColor || '#0284c7';
-          let glassBg = 'rgba(2, 132, 199, 0.4)';
+          let glassBg = 'rgba(2, 132, 199, 0.22)';
           if (rawBg.startsWith('#')) {
             let hex = rawBg.slice(1);
             if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
             const r = parseInt(hex.substring(0, 2), 16) || 2;
             const g = parseInt(hex.substring(2, 4), 16) || 132;
             const b = parseInt(hex.substring(4, 6), 16) || 199;
-            glassBg = `rgba(${r}, ${g}, ${b}, 0.4)`;
+            glassBg = `rgba(${r}, ${g}, ${b}, 0.22)`;
           } else if (rawBg.startsWith('rgba')) {
-            glassBg = rawBg.replace(/[\d\.]+\)$/, '0.4)');
+            glassBg = rawBg.replace(/[\d\.]+\)$/, '0.22)');
           }
 
           const icon = L.divIcon({
             className: 'gmap-text-label-marker',
             iconSize: [0, 0],
             iconAnchor: [0, 0],
-            html: `<div style="transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;"><div style="background: ${glassBg}; color: ${ast.textColor || '#ffffff'}; border: 1.5px solid rgba(255, 255, 255, 0.7); border-radius: 10px; padding: 6px 14px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.85rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div></div>`
+            html: `<div style="transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;"><div style="background: ${glassBg}; color: ${ast.textColor || '#ffffff'}; border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 8px; padding: 5px 12px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.85rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; text-shadow: 0 1.5px 4px rgba(0,0,0,0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.25); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div></div>`
           });
           const marker = L.marker(latLng, { icon, interactive: false }).addTo(this.map);
           this.roadPolygons.push(marker);
