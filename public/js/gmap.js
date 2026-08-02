@@ -216,12 +216,25 @@ class GMapManager {
       assets.forEach(ast => {
         if (ast.assetType === 'textLabel' || ast.subType === 'textLabel') {
           const latLng = this.localToLatLng(ast.x || 0, ast.z || 0);
-            const icon = L.divIcon({
-              className: 'gmap-text-label-marker',
-              iconSize: [0, 0],
-              iconAnchor: [0, 0],
-              html: `<div style="transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;"><div style="background: ${ast.bgColor || '#0284c7'}; color: ${ast.textColor || '#ffffff'}; border: 2px solid #ffffff; border-radius: 8px; padding: 6px 16px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.9rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; box-shadow: 0 4px 14px rgba(0,0,0,0.5); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div></div>`
-            });
+          const rawBg = ast.bgColor || '#0284c7';
+          let glassBg = 'rgba(2, 132, 199, 0.4)';
+          if (rawBg.startsWith('#')) {
+            let hex = rawBg.slice(1);
+            if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+            const r = parseInt(hex.substring(0, 2), 16) || 2;
+            const g = parseInt(hex.substring(2, 4), 16) || 132;
+            const b = parseInt(hex.substring(4, 6), 16) || 199;
+            glassBg = `rgba(${r}, ${g}, ${b}, 0.4)`;
+          } else if (rawBg.startsWith('rgba')) {
+            glassBg = rawBg.replace(/[\d\.]+\)$/, '0.4)');
+          }
+
+          const icon = L.divIcon({
+            className: 'gmap-text-label-marker',
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+            html: `<div style="transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;"><div style="background: ${glassBg}; color: ${ast.textColor || '#ffffff'}; border: 1.5px solid rgba(255, 255, 255, 0.7); border-radius: 10px; padding: 6px 14px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.85rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div></div>`
+          });
           const marker = L.marker(latLng, { icon, interactive: false }).addTo(this.map);
           this.roadPolygons.push(marker);
         }
@@ -274,24 +287,21 @@ class GMapManager {
         const hd = (p.h || 2.97) / 2;
         const rot = p.rot || 0;
         
-        let localCorners = [];
-        if (Math.abs(rot) > 0.01) {
-          const cr = Math.cos(rot);
-          const sr = Math.sin(rot);
-          localCorners = [
-            [cx - hw*cr + hd*sr, cz - hw*sr - hd*cr],
-            [cx + hw*cr + hd*sr, cz + hw*sr - hd*cr],
-            [cx + hw*cr - hd*sr, cz + hw*sr + hd*cr],
-            [cx - hw*cr - hd*sr, cz - hw*sr + hd*cr]
-          ];
-        } else {
-          localCorners = [
-            [cx - hw, cz - hd],
-            [cx + hw, cz - hd],
-            [cx + hw, cz + hd],
-            [cx - hw, cz + hd]
-          ];
-        }
+        const cos = Math.cos(rot);
+        const sin = Math.sin(rot);
+
+        const offsets = [
+          [-hw, -hd], // Top-Left
+          [ hw, -hd], // Top-Right
+          [ hw,  hd], // Bottom-Right
+          [-hw,  hd]  // Bottom-Left
+        ];
+
+        const localCorners = offsets.map(([dx, dz]) => {
+          const rx = dx * cos + dz * sin;
+          const rz = -dx * sin + dz * cos;
+          return [cx + rx, cz + rz];
+        });
         latLngs = localCorners.map(pt => this.localToLatLng(pt[0], pt[1]));
       }
 
@@ -492,24 +502,21 @@ class GMapManager {
       const hd = (road.d || 10) / 2;
       const rot = road.rot || 0;
 
-      let localCorners = [];
-      if (Math.abs(rot) > 0.01) {
-        const cr = Math.cos(rot);
-        const sr = Math.sin(rot);
-        localCorners = [
-          [cx - hw*cr + hd*sr, cz - hw*sr - hd*cr],
-          [cx + hw*cr + hd*sr, cz + hw*sr - hd*cr],
-          [cx + hw*cr - hd*sr, cz + hw*sr + hd*cr],
-          [cx - hw*cr - hd*sr, cz - hw*sr + hd*cr]
-        ];
-      } else {
-        localCorners = [
-          [cx - hw, cz - hd],
-          [cx + hw, cz - hd],
-          [cx + hw, cz + hd],
-          [cx - hw, cz + hd]
-        ];
-      }
+      const cos = Math.cos(rot);
+      const sin = Math.sin(rot);
+
+      const offsets = [
+        [-hw, -hd], // Top-Left
+        [ hw, -hd], // Top-Right
+        [ hw,  hd], // Bottom-Right
+        [-hw,  hd]  // Bottom-Left
+      ];
+
+      const localCorners = offsets.map(([dx, dz]) => {
+        const rx = dx * cos + dz * sin;
+        const rz = -dx * sin + dz * cos;
+        return [cx + rx, cz + rz];
+      });
 
       const latLngs = localCorners.map(pt => this.localToLatLng(pt[0], pt[1]));
       const roadColor = road.type === 'ring' ? '#f59e0b' : (road.type === 'main' ? '#38bdf8' : '#94a3b8');
