@@ -10,7 +10,7 @@
   let gmapManager;
   let locationMapInstance = null;
   let plotsData = {};
-  let currentViewMode = '3d'; // 'top', '3d'
+  let currentViewMode = '2d'; // '2d', '3d'
   let locationPanelOpen = false;
   
   // --- Init ---
@@ -99,10 +99,9 @@
         console.warn('Location panel setup warning:', e);
       }
 
-      // 8. Default View Mode: 3D Layout View
+      // 8. Default View Mode: 2D Google Map View
       try {
-        setViewMode('3d');
-        if (scene) scene.set3DView();
+        setViewMode('2d');
       } catch (e) {
         console.warn('setViewMode warning:', e);
       }
@@ -429,6 +428,18 @@
     }
   }
 
+  function focusSiteLocation() {
+    const lat = (gmapManager && gmapManager.baseLat) ? gmapManager.baseLat : 22.088368;
+    const lng = (gmapManager && gmapManager.baseLng) ? gmapManager.baseLng : 78.863390;
+    
+    if (gmapManager && gmapManager.map) {
+      gmapManager.map.flyTo([lat, lng], 18, { animate: true, duration: 0.8 });
+    }
+    if (scene) {
+      scene.resetView();
+    }
+  }
+
   function toggleLocationPanel(forceState) {
     let panel = document.getElementById('location-panel');
     if (!panel) {
@@ -443,6 +454,7 @@
     const headerBtn = document.getElementById('btn-header-location');
 
     if (locationPanelOpen) {
+      focusSiteLocation();
       panel.classList.remove('hidden');
       panel.style.display = 'flex';
       if (btn) btn.classList.add('active');
@@ -549,6 +561,32 @@
   }
 
   // --- Event Listeners ---
+  function openGoogleMapsNavigation() {
+    const siteLat = (gmapManager && gmapManager.baseLat) ? gmapManager.baseLat : 22.088368;
+    const siteLng = (gmapManager && gmapManager.baseLng) ? gmapManager.baseLng : 78.863390;
+
+    focusSiteLocation();
+
+    const defaultNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${siteLat},${siteLng}&travelmode=driving`;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          const userNavUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${siteLat},${siteLng}&travelmode=driving`;
+          window.open(userNavUrl, '_blank');
+        },
+        () => {
+          window.open(defaultNavUrl, '_blank');
+        },
+        { enableHighAccuracy: true, timeout: 3000 }
+      );
+    } else {
+      window.open(defaultNavUrl, '_blank');
+    }
+  }
+
   function setupEventListeners() {
     const closeBtn = document.getElementById('close-plot-info');
     if (closeBtn) closeBtn.addEventListener('click', closePlotInfo);
@@ -583,6 +621,7 @@
     const btnLocation = document.getElementById('btn-view-location');
     if (btnLocation) {
       btnLocation.addEventListener('click', () => {
+        openGoogleMapsNavigation();
         toggleLocationPanel();
       });
     }
@@ -590,6 +629,7 @@
     const btnHeaderLoc = document.getElementById('btn-header-location');
     if (btnHeaderLoc) {
       btnHeaderLoc.addEventListener('click', () => {
+        openGoogleMapsNavigation();
         toggleLocationPanel();
       });
     }

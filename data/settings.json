@@ -14,7 +14,7 @@
     "rotation": 0,
     "scale": 11.3,
     "mapType": "hybrid",
-    "defaultView": "3d"
+    "defaultView": "2d"
   },
   "titleBadge": {
     "enabled": true,
