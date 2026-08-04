@@ -3,7 +3,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-const { syncToGitHub } = require('./github-sync');
+const { syncToGitHub, commitLocalGit } = require('./github-sync');
 
 const REPO_DATA_DIR = path.join(__dirname, 'data');
 
@@ -11,7 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 let DATA_DIR = path.join(__dirname, 'data');
-if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT) {
+const isServerlessRuntime = !!(
+  process.env.NETLIFY ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  process.env.VERCEL ||
+  process.env.NOW_REGION
+);
+if (isServerlessRuntime) {
   const tmpDataDir = path.join('/tmp', 'data');
   if (!fs.existsSync(tmpDataDir)) {
     fs.mkdirSync(tmpDataDir, { recursive: true });
@@ -78,9 +85,17 @@ async function persistToGitHub(action, relativePaths, metadata = {}) {
   syncDataFilesToRepository(relativePaths);
   const timestamp = metadata.timestamp || new Date().toISOString();
   const result = await syncToGitHub(relativePaths, action, { ...metadata, timestamp });
-  if (!result.success && result.reason !== 'missing-github-config') {
-    console.warn(`[github-sync] ${action} failed:`, result.error || result.reason);
+  if (result.success) {
+    return result;
   }
+  if (result.reason === 'missing-github-config') {
+    const localResult = commitLocalGit(relativePaths, action, { ...metadata, timestamp, push: false });
+    if (!localResult.success) {
+      console.warn(`[github-sync] local git fallback failed:`, localResult.error || localResult.reason);
+    }
+    return localResult;
+  }
+  console.warn(`[github-sync] ${action} failed:`, result.error || result.reason);
   return result;
 }
 
@@ -269,6 +284,15 @@ app.post('/api/logout', (req, res) => {
 
 // Check auth status
 app.get('/api/auth-status', (req, res) => {
+  const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
+  if (ADMIN_SECRET && headerSecret === ADMIN_SECRET) {
+    return res.json({
+      isAdmin: true,
+      username: 'admin',
+      role: 'admin'
+    });
+  }
+
   res.json({ 
     isAdmin: !!(req.session && req.session.isAdmin),
     username: req.session ? req.session.username : null,

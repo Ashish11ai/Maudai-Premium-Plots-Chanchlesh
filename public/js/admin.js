@@ -16,16 +16,22 @@
   let currentUserRole = 'admin';
   let currentUsername = 'admin';
 
-  // If server injected an admin secret via /admin-config.js, monkey-patch fetch
-  if (typeof window !== 'undefined' && window.__ADMIN_SECRET) {
+  function getUrlParam(name) {
+    if (typeof window === 'undefined' || !window.location || !window.location.search) return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  const adminSecret = window.__ADMIN_SECRET || getUrlParam('secret') || getUrlParam('admin_secret') || getUrlParam('access_key');
+
+  if (adminSecret) {
     try {
       const _origFetch = window.fetch.bind(window);
       window.fetch = function(url, opts) {
         opts = opts || {};
         opts.headers = opts.headers || {};
-        // Do not overwrite existing header
         if (!opts.headers['x-admin-secret'] && !opts.headers['X-Admin-Secret']) {
-          opts.headers['x-admin-secret'] = window.__ADMIN_SECRET;
+          opts.headers['x-admin-secret'] = adminSecret;
         }
         return _origFetch(url, opts);
       };
@@ -60,8 +66,8 @@
 
     const layoutObj = scene.getLayoutData();
     // Attach admin secret in body for sendBeacon (headers cannot be set)
-    if (typeof window !== 'undefined' && window.__ADMIN_SECRET) {
-      layoutObj._admin_secret = window.__ADMIN_SECRET;
+    if (adminSecret) {
+      layoutObj._admin_secret = adminSecret;
     }
     const data = JSON.stringify(layoutObj);
 
@@ -98,7 +104,24 @@
   
   // --- Init ---
   async function init() {
-    // Check auth status first
+    // If URL or injected secret is present, treat as admin and skip login.
+    if (adminSecret) {
+      currentUserRole = 'admin';
+      currentUsername = 'admin';
+      showDashboard();
+
+      // Remove the secret from the address bar after login for security.
+      if (window.location.search && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('secret');
+        url.searchParams.delete('admin_secret');
+        url.searchParams.delete('access_key');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+      }
+      return;
+    }
+
+    // Otherwise check auth status.
     const authRes = await fetch('/api/auth-status');
     const authData = await authRes.json();
     

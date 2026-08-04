@@ -1,6 +1,7 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 function getGitHubRepoConfig() {
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
@@ -176,10 +177,51 @@ async function syncToGitHub(relativePaths, action, metadata = {}) {
   }
 }
 
+function commitLocalGit(relativePaths, action, metadata = {}) {
+  const repoDir = process.cwd();
+  const timestamp = metadata.timestamp || new Date().toISOString();
+  const message = buildCommitMessage(action, timestamp);
+
+  const filePaths = relativePaths
+    .map(p => path.relative(repoDir, path.resolve(repoDir, p)))
+    .map(p => p.replace(/\\/g, '/'))
+    .filter(p => p && fs.existsSync(path.resolve(repoDir, p)));
+
+  if (!filePaths.length) {
+    return { success: false, reason: 'no-files' };
+  }
+
+  try {
+    filePaths.forEach(file => {
+      execFileSync('git', ['add', '--', file], { cwd: repoDir, stdio: 'ignore' });
+    });
+
+    const diff = execFileSync('git', ['diff', '--cached', '--name-only', '--', ...filePaths], { cwd: repoDir });
+    if (!diff.toString().trim()) {
+      return { success: true, reason: 'no-changes' };
+    }
+
+    execFileSync('git', ['commit', '-m', message], { cwd: repoDir, stdio: 'ignore' });
+
+    if (metadata.push !== false) {
+      try {
+        execFileSync('git', ['push'], { cwd: repoDir, stdio: 'ignore' });
+      } catch (pushErr) {
+        return { success: true, reason: 'committed-no-push', message, warning: pushErr.message };
+      }
+    }
+
+    return { success: true, message };
+  } catch (err) {
+    return { success: false, reason: 'git-local-failure', error: err.message };
+  }
+}
+
 module.exports = {
   getGitHubRepoConfig,
   buildCommitMessage,
   syncToGitHub,
+  commitLocalGit,
   readFileContent,
   writeFileContent
 };
