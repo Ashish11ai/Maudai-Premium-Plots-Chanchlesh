@@ -3,6 +3,9 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const { syncToGitHub } = require('./github-sync');
+
+const REPO_DATA_DIR = path.join(__dirname, 'data');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +27,8 @@ if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.L
 
 const PLOTS_FILE = path.join(DATA_DIR, 'plots.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.NETLIFY_ADMIN_SECRET || '';
 
 // Middleware
 app.use(bodyParser.json());
@@ -54,6 +59,29 @@ function loadPlots() {
 
 function savePlots(data) {
   fs.writeFileSync(PLOTS_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function syncDataFilesToRepository(relativePaths) {
+  const normalizedPaths = relativePaths.map(p => p.replace(/\\/g, '/'));
+  normalizedPaths.forEach(relativePath => {
+    const fileName = relativePath.split('/').pop();
+    const sourcePath = path.join(DATA_DIR, fileName);
+    const targetPath = path.join(REPO_DATA_DIR, fileName);
+    if (fs.existsSync(sourcePath)) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  });
+}
+
+async function persistToGitHub(action, relativePaths, metadata = {}) {
+  syncDataFilesToRepository(relativePaths);
+  const timestamp = metadata.timestamp || new Date().toISOString();
+  const result = await syncToGitHub(relativePaths, action, { ...metadata, timestamp });
+  if (!result.success && result.reason !== 'missing-github-config') {
+    console.warn(`[github-sync] ${action} failed:`, result.error || result.reason);
+  }
+  return result;
 }
 
 function loadSettings() {
@@ -94,15 +122,33 @@ function saveSettings(data) {
 // --- Auth Middleware ---
 // --- Auth Middleware ---
 function requireAdmin(req, res, next) {
-  if (req.session && req.session.isAdmin) {
-    return next();
+  // Allow admin via session OR admin secret header/body when configured
+  if (req.session && req.session.isAdmin) return next();
+  if (ADMIN_SECRET) {
+    const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
+    const bodySecret = req.body && req.body._admin_secret;
+    if (headerSecret === ADMIN_SECRET || bodySecret === ADMIN_SECRET) {
+      // Treat as admin for this request
+      req.session = req.session || {};
+      req.session.isAdmin = true;
+      req.session.userRole = 'admin';
+      return next();
+    }
   }
   return res.status(401).json({ error: 'Unauthorized. Please login.' });
 }
 
 function requireAdminOnly(req, res, next) {
-  if (req.session && req.session.isAdmin && req.session.userRole === 'admin') {
-    return next();
+  if (req.session && req.session.isAdmin && req.session.userRole === 'admin') return next();
+  if (ADMIN_SECRET) {
+    const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
+    const bodySecret = req.body && req.body._admin_secret;
+    if (headerSecret === ADMIN_SECRET || bodySecret === ADMIN_SECRET) {
+      req.session = req.session || {};
+      req.session.isAdmin = true;
+      req.session.userRole = 'admin';
+      return next();
+    }
   }
   return res.status(403).json({ error: 'Forbidden. Full Admin access required for this action.' });
 }
@@ -277,7 +323,7 @@ app.get('/api/infrastructure', (req, res) => {
 });
 
 // Update single plot (admin only)
-app.put('/api/plots/:id', requireAdmin, (req, res) => {
+app.put('/api/plots/:id', requireAdmin, async (req, res) => {
   const plots = loadPlots();
   const details = loadPlotDetails();
   const id = req.params.id;
@@ -285,17 +331,30 @@ app.put('/api/plots/:id', requireAdmin, (req, res) => {
   if (!plots[id]) {
     return res.status(404).json({ error: 'Plot not found' });
   }
-  
+
+  const now = new Date().toISOString();
+  const prev = Object.assign({}, plots[id]);
   const { status, price, notes, area, dimensions_str, facing_road, width_ft, depth_ft } = req.body;
   
-  if (status) plots[id].status = status;
-  if (price !== undefined) plots[id].price = Number(price);
-  if (notes !== undefined) plots[id].notes = notes;
+  if (status && status !== prev.status) {
+    plots[id].status = status;
+    plots[id].status_changed_at = now;
+  }
+  if (price !== undefined && Number(price) !== Number(prev.price)) {
+    plots[id].price = Number(price);
+    plots[id].price_updated_at = now;
+  }
+  if (notes !== undefined) {
+    plots[id].notes = notes;
+  }
   if (area !== undefined) plots[id].area = Number(area);
   if (dimensions_str !== undefined) plots[id].dimensions_str = dimensions_str;
   if (facing_road !== undefined) plots[id].facing_road = facing_road;
   if (width_ft !== undefined) plots[id].width_ft = Number(width_ft);
   if (depth_ft !== undefined) plots[id].depth_ft = Number(depth_ft);
+
+  // Always update updated_at
+  plots[id].updated_at = now;
 
   // Also persist in plot_details.json to ensure persistence across reloads
   if (!details.plots) details.plots = {};
@@ -306,31 +365,43 @@ app.put('/api/plots/:id', requireAdmin, (req, res) => {
   if (width_ft !== undefined) details.plots[id].width_ft = Number(width_ft);
   if (depth_ft !== undefined) details.plots[id].depth_ft = Number(depth_ft);
   if (facing_road !== undefined) details.plots[id].facing_road = facing_road;
-  
+
   savePlots(plots);
   savePlotDetails(details);
-  
+
+  await persistToGitHub('plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
+
   res.json({ success: true, plot: plots[id] });
 });
 
 // Bulk update plots (admin only)
-app.put('/api/plots-bulk', requireAdmin, (req, res) => {
+app.put('/api/plots-bulk', requireAdmin, async (req, res) => {
   const plots = loadPlots();
   const updates = req.body.updates; // Array of { id, status, price, notes }
   
   if (!Array.isArray(updates)) {
     return res.status(400).json({ error: 'updates must be an array' });
   }
-  
+
+  const now = new Date().toISOString();
   updates.forEach(update => {
     if (plots[update.id]) {
-      if (update.status) plots[update.id].status = update.status;
-      if (update.price !== undefined) plots[update.id].price = update.price;
+      const prev = Object.assign({}, plots[update.id]);
+      if (update.status && update.status !== prev.status) {
+        plots[update.id].status = update.status;
+        plots[update.id].status_changed_at = now;
+      }
+      if (update.price !== undefined && Number(update.price) !== Number(prev.price)) {
+        plots[update.id].price = Number(update.price);
+        plots[update.id].price_updated_at = now;
+      }
       if (update.notes !== undefined) plots[update.id].notes = update.notes;
+      plots[update.id].updated_at = now;
     }
   });
   
   savePlots(plots);
+  await persistToGitHub('bulk-plot-update', ['data/plots.json'], { timestamp: now });
   res.json({ success: true, plots });
 });
 
@@ -413,7 +484,7 @@ app.get('/api/assets', (req, res) => {
 });
 
 // Save Layout (Plots, Roads, and Custom Assets - Admin Only)
-app.post('/api/save-layout', requireAdminOnly, (req, res) => {
+app.post('/api/save-layout', requireAdminOnly, async (req, res) => {
   try {
     const { plots, roads, walls, assets } = req.body;
     const plotDataPath = path.join(__dirname, 'public/js/plotData.js');
@@ -478,7 +549,8 @@ app.post('/api/save-layout', requireAdminOnly, (req, res) => {
           ]);
         }
 
-        // Update plots.json entry
+        // Update plots.json entry and record update timestamp
+        const now = new Date().toISOString();
         if (!existingPlots[id]) {
           existingPlots[id] = {
             number: parseInt(id) || id,
@@ -487,11 +559,14 @@ app.post('/api/save-layout', requireAdminOnly, (req, res) => {
             price: 0,
             notes: '',
             polygon: p.polygon || plotPolygons[id],
-            approved: true
+            approved: true,
+            updated_at: now
           };
         } else {
           if (area_sqft > 0) existingPlots[id].area = area_sqft;
           if (p.polygon) existingPlots[id].polygon = p.polygon;
+          existingPlots[id].updated_at = now;
+          if (p.polygon) existingPlots[id].polygon_updated_at = now;
         }
       });
 
@@ -515,6 +590,9 @@ app.post('/api/save-layout', requireAdminOnly, (req, res) => {
       saveAssets(assets);
     }
 
+    const gitHubFiles = ['data/plots.json', 'data/plot_details.json', 'data/custom_assets.json'];
+    await persistToGitHub('save-layout', gitHubFiles);
+
     res.json({ success: true, count: Object.keys(plots || {}).length });
   } catch (err) {
     console.error('Error saving layout:', err);
@@ -528,10 +606,11 @@ app.get('/api/settings', (req, res) => {
 });
 
 // Update overlay settings (admin only)
-app.put('/api/settings', requireAdminOnly, (req, res) => {
+app.put('/api/settings', requireAdminOnly, async (req, res) => {
   const settings = loadSettings();
   Object.assign(settings, req.body);
   saveSettings(settings);
+  await persistToGitHub('settings-update', ['data/settings.json']);
   res.json({ success: true, settings });
 });
 
@@ -542,6 +621,13 @@ app.get('/', (req, res) => {
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Serve a small JS snippet with runtime admin secret (if configured)
+app.get('/admin-config.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  // Expose admin secret to client only if it's configured; empty string otherwise
+  res.send(`window.__ADMIN_SECRET = ${JSON.stringify(ADMIN_SECRET)};`);
 });
 
 // --- Initialize plots data if not exists ---

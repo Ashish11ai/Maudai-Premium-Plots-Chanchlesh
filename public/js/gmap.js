@@ -229,11 +229,15 @@ class GMapManager {
             glassBg = rawBg.replace(/[\d\.]+\)$/, '0.22)');
           }
 
+          // Apply rotation from asset data (stored in radians) when rendering in 2D map
+          const rotRad = ast.rot || ast.rotY || 0;
           const icon = L.divIcon({
             className: 'gmap-text-label-marker',
             iconSize: [0, 0],
             iconAnchor: [0, 0],
-            html: `<div style="transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; pointer-events: none;"><div style="background: ${glassBg}; color: ${ast.textColor || '#ffffff'}; border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 8px; padding: 5px 12px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.85rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; text-shadow: 0 1.5px 4px rgba(0,0,0,0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.25); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div></div>`
+            html: `<div style="transform: translate(-50%, -50%) rotate(${rotRad}rad); display: flex; align-items: center; justify-content: center; pointer-events: none; transform-origin: center;">
+                     <div style="background: ${glassBg}; color: ${ast.textColor || '#ffffff'}; border: 1px solid rgba(255, 255, 255, 0.65); border-radius: 8px; padding: 5px 12px; font-family: Outfit, Inter, sans-serif; font-weight: 800; font-size: 0.85rem; text-align: center; width: max-content; max-width: 280px; min-width: 100px; white-space: normal; overflow-wrap: break-word; word-wrap: break-word; text-shadow: 0 1.5px 4px rgba(0,0,0,0.95); box-shadow: 0 2px 8px rgba(0,0,0,0.25); line-height: 1.3;">${ast.text || ast.name || 'Text Label'}</div>
+                   </div>`
           });
           const marker = L.marker(latLng, { icon, interactive: false }).addTo(this.map);
           this.roadPolygons.push(marker);

@@ -16,6 +16,24 @@
   let currentUserRole = 'admin';
   let currentUsername = 'admin';
 
+  // If server injected an admin secret via /admin-config.js, monkey-patch fetch
+  if (typeof window !== 'undefined' && window.__ADMIN_SECRET) {
+    try {
+      const _origFetch = window.fetch.bind(window);
+      window.fetch = function(url, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        // Do not overwrite existing header
+        if (!opts.headers['x-admin-secret'] && !opts.headers['X-Admin-Secret']) {
+          opts.headers['x-admin-secret'] = window.__ADMIN_SECRET;
+        }
+        return _origFetch(url, opts);
+      };
+    } catch (e) {
+      // ignore
+    }
+  }
+
   async function persistLayout(options = {}) {
     if (currentUserRole === 'accountant') return { success: false };
     const { keepalive = false, silent = true } = options;
@@ -40,7 +58,12 @@
       autoSaveTimer = null;
     }
 
-    const data = JSON.stringify(scene.getLayoutData());
+    const layoutObj = scene.getLayoutData();
+    // Attach admin secret in body for sendBeacon (headers cannot be set)
+    if (typeof window !== 'undefined' && window.__ADMIN_SECRET) {
+      layoutObj._admin_secret = window.__ADMIN_SECRET;
+    }
+    const data = JSON.stringify(layoutObj);
 
     if (navigator.sendBeacon) {
       const payload = new Blob([data], { type: 'application/json' });
