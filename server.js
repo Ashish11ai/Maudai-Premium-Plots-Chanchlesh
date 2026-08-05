@@ -124,6 +124,65 @@ function saveToDbCache(key, value) {
   return true;
 }
 
+// --- Security & Anti-Scraping Middleware ---
+const loginRateMap = new Map();
+const apiRateMap = new Map();
+
+function rateLimiter(map, windowMs, maxRequests, message) {
+  return (req, res, next) => {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    let record = map.get(ip);
+
+    if (!record || now - record.startTime > windowMs) {
+      record = { count: 1, startTime: now };
+      map.set(ip, record);
+      return next();
+    }
+
+    record.count++;
+    if (record.count > maxRequests) {
+      return res.status(429).json({ error: message || 'Too many requests. Please try again later.' });
+    }
+    next();
+  };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of loginRateMap.entries()) {
+    if (now - rec.startTime > 5 * 60 * 1000) loginRateMap.delete(ip);
+  }
+  for (const [ip, rec] of apiRateMap.entries()) {
+    if (now - rec.startTime > 60 * 1000) apiRateMap.delete(ip);
+  }
+}, 10 * 60 * 1000);
+
+// Global Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+// Block requests for sensitive extensions or hidden files
+app.use((req, res, next) => {
+  const urlPath = req.path.toLowerCase();
+  if (urlPath.includes('.env') || urlPath.includes('.git') || urlPath.endsWith('.py') || urlPath.endsWith('.sh')) {
+    return res.status(403).json({ error: 'Access denied.' });
+  }
+  next();
+});
+
+// Apply API Rate Limiter
+app.use('/api/', rateLimiter(apiRateMap, 60 * 1000, 120, 'API rate limit exceeded. Please slow down.'));
+
+// Apply Login Rate Limiter specifically to login endpoint
+app.post('/api/login', rateLimiter(loginRateMap, 5 * 60 * 1000, 10, 'Too many login attempts. Please wait 5 minutes before trying again.'));
+
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public'), {
