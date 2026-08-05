@@ -3,6 +3,14 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+let MongoClient = null;
+try {
+  MongoClient = require('mongodb').MongoClient;
+} catch (err) {
+  if (process.env.MONGODB_URI) {
+    throw err;
+  }
+}
 const { syncToGitHub, commitLocalGit } = require('./github-sync');
 
 const REPO_DATA_DIR = path.join(__dirname, 'data');
@@ -36,6 +44,71 @@ const PLOTS_FILE = path.join(DATA_DIR, 'plots.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || process.env.NETLIFY_ADMIN_SECRET || '';
+const MONGODB_URI = process.env.MONGODB_URI || '';
+const MONGODB_DB = process.env.MONGODB_DB || 'maudai_plots';
+let dbEnabled = false;
+let dbCache = {
+  plots: null,
+  settings: null,
+  plotDetails: null,
+  assets: null,
+  plotData: null
+};
+let mongoClient = null;
+let mongoDb = null;
+
+async function initDatabaseStore() {
+  if (!MONGODB_URI || !MongoClient) return;
+  try {
+    mongoClient = new MongoClient(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoClient.connect();
+    mongoDb = mongoClient.db(MONGODB_DB);
+    dbEnabled = true;
+    const coll = mongoDb.collection('app_data');
+
+    const [plotsDoc, settingsDoc, detailsDoc, assetsDoc, plotDataDoc] = await Promise.all([
+      coll.findOne({ _id: 'plots' }),
+      coll.findOne({ _id: 'settings' }),
+      coll.findOne({ _id: 'plotDetails' }),
+      coll.findOne({ _id: 'assets' }),
+      coll.findOne({ _id: 'plotData' })
+    ]);
+
+    dbCache.plots = plotsDoc ? plotsDoc.value : null;
+    dbCache.settings = settingsDoc ? settingsDoc.value : null;
+    dbCache.plotDetails = detailsDoc ? detailsDoc.value : null;
+    dbCache.assets = assetsDoc ? assetsDoc.value : null;
+    dbCache.plotData = plotDataDoc ? plotDataDoc.value : null;
+
+    console.log('Database store enabled for backend persistence.');
+  } catch (err) {
+    console.warn('MongoDB initialization failed, falling back to local file storage:', err.message || err);
+    dbEnabled = false;
+  }
+}
+
+async function saveToDb(key, value) {
+  if (!dbEnabled || !mongoDb) return false;
+  try {
+    const coll = mongoDb.collection('app_data');
+    await coll.updateOne({ _id: key }, { $set: { value } }, { upsert: true });
+    return true;
+  } catch (err) {
+    console.warn(`Failed to save ${key} to DB:`, err.message || err);
+    return false;
+  }
+}
+
+function loadFromDb(key) {
+  return dbEnabled ? dbCache[key] : null;
+}
+
+function saveToDbCache(key, value) {
+  if (!dbEnabled) return false;
+  dbCache[key] = value;
+  saveToDb(key, value).catch(() => {});
+  return true;
+}
 
 // Middleware
 app.use(bodyParser.json());
@@ -58,6 +131,8 @@ app.use(session({
 
 // --- Data Helpers ---
 function loadPlots() {
+  const dbValue = loadFromDb('plots');
+  if (dbValue) return dbValue;
   if (fs.existsSync(PLOTS_FILE)) {
     return JSON.parse(fs.readFileSync(PLOTS_FILE, 'utf8'));
   }
@@ -65,6 +140,7 @@ function loadPlots() {
 }
 
 function savePlots(data) {
+  if (saveToDbCache('plots', data)) return;
   fs.writeFileSync(PLOTS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -86,6 +162,7 @@ async function persistToGitHub(action, relativePaths, metadata = {}) {
   const timestamp = metadata.timestamp || new Date().toISOString();
   const result = await syncToGitHub(relativePaths, action, { ...metadata, timestamp });
   if (result.success) {
+    console.log(`[github-sync] ${action} successfully pushed to GitHub repository (branch: ${result.branch || 'main'}).`);
     return result;
   }
   if (result.reason === 'missing-github-config') {
@@ -100,7 +177,8 @@ async function persistToGitHub(action, relativePaths, metadata = {}) {
 }
 
 function loadSettings() {
-  let settings = {
+  const dbValue = loadFromDb('settings');
+  let settings = dbValue || {
     overlay: { x: 0, y: 0, z: 0, scale: 1, rotation: 0, opacity: 0.7 },
     gmap: {
       lat: 22.088368,
@@ -111,7 +189,7 @@ function loadSettings() {
       mapType: 'satellite'
     }
   };
-  if (fs.existsSync(SETTINGS_FILE)) {
+  if (!dbValue && fs.existsSync(SETTINGS_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
       settings = Object.assign(settings, data);
@@ -131,6 +209,7 @@ function loadSettings() {
 }
 
 function saveSettings(data) {
+  if (saveToDbCache('settings', data)) return;
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -243,7 +322,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Change Admin Password & Username (Admin Only)
-app.post('/api/change-password', requireAdminOnly, (req, res) => {
+app.post('/api/change-password', requireAdminOnly, async (req, res) => {
   const { currentPassword, newUsername, newPassword } = req.body;
   const users = getUsers();
   const adminUser = users['admin'] || users[Object.keys(users).find(k => users[k].role === 'admin') || 'admin'];
@@ -272,6 +351,7 @@ app.post('/api/change-password', requireAdminOnly, (req, res) => {
   };
 
   saveSettings(settings);
+  await persistToGitHub('change-password', ['data/settings.json']);
 
   return res.json({ success: true, message: 'Admin credentials updated successfully!' });
 });
@@ -303,6 +383,8 @@ app.get('/api/auth-status', (req, res) => {
 const DETAILS_FILE = path.join(DATA_DIR, 'plot_details.json');
 
 function loadPlotDetails() {
+  const dbValue = loadFromDb('plotDetails');
+  if (dbValue) return dbValue;
   if (fs.existsSync(DETAILS_FILE)) {
     return JSON.parse(fs.readFileSync(DETAILS_FILE, 'utf8'));
   }
@@ -310,6 +392,7 @@ function loadPlotDetails() {
 }
 
 function savePlotDetails(details) {
+  if (saveToDbCache('plotDetails', details)) return;
   fs.writeFileSync(DETAILS_FILE, JSON.stringify(details, null, 2), 'utf8');
 }
 
@@ -425,13 +508,15 @@ app.put('/api/plots-bulk', requireAdmin, async (req, res) => {
   });
   
   savePlots(plots);
-  await persistToGitHub('bulk-plot-update', ['data/plots.json'], { timestamp: now });
+  await persistToGitHub('bulk-plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
   res.json({ success: true, plots });
 });
 
 const ASSETS_FILE = path.join(DATA_DIR, 'custom_assets.json');
 
 function loadAssets() {
+  const dbValue = loadFromDb('assets');
+  if (dbValue) return dbValue;
   if (fs.existsSync(ASSETS_FILE)) {
     return JSON.parse(fs.readFileSync(ASSETS_FILE, 'utf8'));
   }
@@ -439,6 +524,7 @@ function loadAssets() {
 }
 
 function saveAssets(data) {
+  if (saveToDbCache('assets', data)) return;
   fs.writeFileSync(ASSETS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
@@ -608,13 +694,22 @@ app.post('/api/save-layout', requireAdminOnly, async (req, res) => {
       fileContent = upsertJsConst(fileContent, 'SITE_WALL_SEGMENTS', walls);
     }
     
-    fs.writeFileSync(plotDataPath, fileContent, 'utf8');
+    try {
+      fs.writeFileSync(plotDataPath, fileContent, 'utf8');
+    } catch (e) {
+      console.warn('[server] Could not write to __dirname/public/js/plotData.js, using fallback:', e.message);
+    }
+    try {
+      const tmpPlotDataPath = path.join('/tmp', 'public', 'js', 'plotData.js');
+      fs.mkdirSync(path.dirname(tmpPlotDataPath), { recursive: true });
+      fs.writeFileSync(tmpPlotDataPath, fileContent, 'utf8');
+    } catch (e) {}
 
     if (assets !== undefined) {
       saveAssets(assets);
     }
 
-    const gitHubFiles = ['data/plots.json', 'data/plot_details.json', 'data/custom_assets.json'];
+    const gitHubFiles = ['public/js/plotData.js', 'data/plots.json', 'data/plot_details.json', 'data/custom_assets.json'];
     await persistToGitHub('save-layout', gitHubFiles);
 
     res.json({ success: true, count: Object.keys(plots || {}).length });
@@ -718,9 +813,14 @@ if (!fs.existsSync(DATA_DIR)) {
 initializePlots();
 initializeSettings();
 
+// Initialize DB store if configured
+initDatabaseStore().catch(err => {
+  console.warn('Database initialization error:', err && err.message ? err.message : err);
+});
+
 // Start server if run directly
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`\n========================================`);
     console.log(`  Maudai Property Plot Layout Server`);
     console.log(`========================================`);
@@ -728,6 +828,15 @@ if (require.main === module) {
     console.log(`  Admin Panel:   http://localhost:${PORT}/admin`);
     console.log(`  Admin Login:   admin / admin123`);
     console.log(`========================================\n`);
+  });
+
+  server.on('error', err => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Please stop the process using it or set PORT to a different port.`);
+      process.exit(1);
+    }
+    console.error('Server error:', err);
+    process.exit(1);
   });
 }
 

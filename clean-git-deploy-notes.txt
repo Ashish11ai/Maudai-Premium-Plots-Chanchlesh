@@ -1,0 +1,11 @@
+Use this project as a GitHub repo-backed app:
+
+1. Push the repository to GitHub.
+2. Set these environment variables in your deployment or server environment:
+   - GITHUB_TOKEN
+   - GITHUB_REPOSITORY (owner/repo)
+   - GITHUB_BRANCH (main or your branch)
+   - ADMIN_SECRET (optional)
+3. Deploy to any Node-capable host that supports Express, or run locally with `npm start`.
+
+The app will save admin plot metadata updates to data files and commit them back to your GitHub repository automatically.
