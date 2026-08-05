@@ -5,6 +5,9 @@ const app = require('../../server');
 const handler = serverless(app);
 
 module.exports.handler = async (event, context) => {
-  // Normalize paths for Netlify rewrite rules if necessary
+  if (event.path && event.path.startsWith('/.netlify/functions/api')) {
+    event.path = event.path.replace('/.netlify/functions/api', '/api');
+  }
   return await handler(event, context);
 };
+

@@ -1,7 +1,9 @@
 {
-  "version": 3,
+  "version": 2,
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/api/(.*)", "destination": "/api/[...slug]" }
   ]
 }
+

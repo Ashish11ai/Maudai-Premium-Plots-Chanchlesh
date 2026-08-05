@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 let MongoClient = null;
@@ -213,36 +214,91 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// --- Auth Middleware ---
-// --- Auth Middleware ---
-function requireAdmin(req, res, next) {
-  // Allow admin via session OR admin secret header/body when configured
-  if (req.session && req.session.isAdmin) return next();
+// --- Auth Middleware & Stateless Token Manager ---
+const JWT_SECRET = process.env.JWT_SECRET || ADMIN_SECRET || 'maudai-plot-layout-jwt-secret-2026';
+
+function generateAuthToken(payload) {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', JWT_SECRET).update(data).digest('base64url');
+  return `${data}.${signature}`;
+}
+
+function verifyAuthToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [data, signature] = parts;
+  const expectedSignature = crypto.createHmac('sha256', JWT_SECRET).update(data).digest('base64url');
+  if (signature !== expectedSignature) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+function parseAuth(req) {
+  if (req.session && req.session.isAdmin) {
+    return {
+      isAdmin: true,
+      username: req.session.username || 'admin',
+      userRole: req.session.userRole || 'admin'
+    };
+  }
+
   if (ADMIN_SECRET) {
     const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
     const bodySecret = req.body && req.body._admin_secret;
     if (headerSecret === ADMIN_SECRET || bodySecret === ADMIN_SECRET) {
-      // Treat as admin for this request
-      req.session = req.session || {};
-      req.session.isAdmin = true;
-      req.session.userRole = 'admin';
-      return next();
+      return { isAdmin: true, username: 'admin', userRole: 'admin' };
     }
+  }
+
+  let token = null;
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'] || req.headers['x-auth-token'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7).trim();
+  } else if (authHeader) {
+    token = authHeader.trim();
+  }
+
+  if (!token && req.headers.cookie) {
+    const match = req.headers.cookie.match(/(?:^|;\s*)auth_token=([^;]+)/);
+    if (match) token = match[1];
+  }
+
+  if (token) {
+    const decoded = verifyAuthToken(token);
+    if (decoded && decoded.username) {
+      return {
+        isAdmin: true,
+        username: decoded.username,
+        userRole: decoded.role || 'admin'
+      };
+    }
+  }
+
+  return null;
+}
+
+function requireAdmin(req, res, next) {
+  const auth = parseAuth(req);
+  if (auth) {
+    req.session = req.session || {};
+    Object.assign(req.session, auth);
+    return next();
   }
   return res.status(401).json({ error: 'Unauthorized. Please login.' });
 }
 
 function requireAdminOnly(req, res, next) {
-  if (req.session && req.session.isAdmin && req.session.userRole === 'admin') return next();
-  if (ADMIN_SECRET) {
-    const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
-    const bodySecret = req.body && req.body._admin_secret;
-    if (headerSecret === ADMIN_SECRET || bodySecret === ADMIN_SECRET) {
-      req.session = req.session || {};
-      req.session.isAdmin = true;
-      req.session.userRole = 'admin';
-      return next();
-    }
+  const auth = parseAuth(req);
+  if (auth && auth.userRole === 'admin') {
+    req.session = req.session || {};
+    Object.assign(req.session, auth);
+    return next();
   }
   return res.status(403).json({ error: 'Forbidden. Full Admin access required for this action.' });
 }
@@ -309,9 +365,19 @@ app.post('/api/login', (req, res) => {
     req.session.isAdmin = true;
     req.session.username = matchedUser.username;
     req.session.userRole = matchedUser.role || 'admin';
+
+    const token = generateAuthToken({
+      username: matchedUser.username,
+      role: matchedUser.role || 'admin',
+      exp: Date.now() + 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.setHeader('Set-Cookie', `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`);
+
     return res.json({ 
       success: true, 
       message: 'Login successful',
+      token,
       user: {
         username: req.session.username,
         role: req.session.userRole
@@ -358,25 +424,28 @@ app.post('/api/change-password', requireAdminOnly, async (req, res) => {
 
 // Logout
 app.post('/api/logout', (req, res) => {
-  req.session.destroy();
+  if (req.session) {
+    try { req.session.destroy(); } catch (e) {}
+  }
+  res.setHeader('Set-Cookie', 'auth_token=; Path=/; HttpOnly; Max-Age=0');
   return res.json({ success: true, message: 'Logged out' });
 });
 
 // Check auth status
 app.get('/api/auth-status', (req, res) => {
-  const headerSecret = req.headers['x-admin-secret'] || req.headers['X-Admin-Secret'];
-  if (ADMIN_SECRET && headerSecret === ADMIN_SECRET) {
+  const auth = parseAuth(req);
+  if (auth) {
     return res.json({
       isAdmin: true,
-      username: 'admin',
-      role: 'admin'
+      username: auth.username,
+      role: auth.userRole
     });
   }
 
   res.json({ 
-    isAdmin: !!(req.session && req.session.isAdmin),
-    username: req.session ? req.session.username : null,
-    role: req.session ? req.session.userRole : null
+    isAdmin: false,
+    username: null,
+    role: null
   });
 });
 

@@ -22,22 +22,28 @@
     return params.get(name);
   }
 
-  const adminSecret = window.__ADMIN_SECRET || getUrlParam('secret') || getUrlParam('admin_secret') || getUrlParam('access_key');
+  const adminSecret = window.__ADMIN_SECRET || getUrlParam('secret') || getUrlParam('admin_secret') || getUrlParam('access_key') || '';
 
-  if (adminSecret) {
-    try {
-      const _origFetch = window.fetch.bind(window);
-      window.fetch = function(url, opts) {
-        opts = opts || {};
-        opts.headers = opts.headers || {};
+  try {
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      opts.headers = opts.headers || {};
+      const authToken = localStorage.getItem('auth_token');
+      if (authToken) {
+        if (!opts.headers['Authorization'] && !opts.headers['authorization']) {
+          opts.headers['Authorization'] = `Bearer ${authToken}`;
+        }
+      }
+      if (adminSecret) {
         if (!opts.headers['x-admin-secret'] && !opts.headers['X-Admin-Secret']) {
           opts.headers['x-admin-secret'] = adminSecret;
         }
-        return _origFetch(url, opts);
-      };
-    } catch (e) {
-      // ignore
-    }
+      }
+      return _origFetch(url, opts);
+    };
+  } catch (e) {
+    // ignore
   }
 
   async function persistLayout(options = {}) {
@@ -155,6 +161,9 @@
         const data = await res.json();
         
         if (data.success) {
+          if (data.token) {
+            localStorage.setItem('auth_token', data.token);
+          }
           currentUserRole = data.user?.role || 'admin';
           currentUsername = data.user?.username || 'admin';
           showDashboard();
@@ -1208,6 +1217,7 @@
     
     // Logout
     document.getElementById('logout-btn').addEventListener('click', async () => {
+      localStorage.removeItem('auth_token');
       await fetch('/api/logout', { method: 'POST' });
       window.location.reload();
     });
