@@ -58,34 +58,47 @@ let dbCache = {
 let mongoClient = null;
 let mongoDb = null;
 
+let dbInitializing = null;
 async function initDatabaseStore() {
   if (!MONGODB_URI || !MongoClient) return;
-  try {
-    mongoClient = new MongoClient(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-    await mongoClient.connect();
-    mongoDb = mongoClient.db(MONGODB_DB);
-    dbEnabled = true;
-    const coll = mongoDb.collection('app_data');
+  if (dbInitializing) return dbInitializing;
+  dbInitializing = (async () => {
+    try {
+      mongoClient = new MongoClient(MONGODB_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 1500,
+        connectTimeoutMS: 1500
+      });
+      await Promise.race([
+        mongoClient.connect(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('MongoDB connection timeout')), 1500))
+      ]);
+      mongoDb = mongoClient.db(MONGODB_DB);
+      dbEnabled = true;
+      const coll = mongoDb.collection('app_data');
 
-    const [plotsDoc, settingsDoc, detailsDoc, assetsDoc, plotDataDoc] = await Promise.all([
-      coll.findOne({ _id: 'plots' }),
-      coll.findOne({ _id: 'settings' }),
-      coll.findOne({ _id: 'plotDetails' }),
-      coll.findOne({ _id: 'assets' }),
-      coll.findOne({ _id: 'plotData' })
-    ]);
+      const [plotsDoc, settingsDoc, detailsDoc, assetsDoc, plotDataDoc] = await Promise.all([
+        coll.findOne({ _id: 'plots' }),
+        coll.findOne({ _id: 'settings' }),
+        coll.findOne({ _id: 'plotDetails' }),
+        coll.findOne({ _id: 'assets' }),
+        coll.findOne({ _id: 'plotData' })
+      ]);
 
-    dbCache.plots = plotsDoc ? plotsDoc.value : null;
-    dbCache.settings = settingsDoc ? settingsDoc.value : null;
-    dbCache.plotDetails = detailsDoc ? detailsDoc.value : null;
-    dbCache.assets = assetsDoc ? assetsDoc.value : null;
-    dbCache.plotData = plotDataDoc ? plotDataDoc.value : null;
+      dbCache.plots = plotsDoc ? plotsDoc.value : null;
+      dbCache.settings = settingsDoc ? settingsDoc.value : null;
+      dbCache.plotDetails = detailsDoc ? detailsDoc.value : null;
+      dbCache.assets = assetsDoc ? assetsDoc.value : null;
+      dbCache.plotData = plotDataDoc ? plotDataDoc.value : null;
 
-    console.log('Database store enabled for backend persistence.');
-  } catch (err) {
-    console.warn('MongoDB initialization failed, falling back to local file storage:', err.message || err);
-    dbEnabled = false;
-  }
+      console.log('Database store enabled for backend persistence.');
+    } catch (err) {
+      console.warn('MongoDB initialization skipped (falling back to file storage):', err.message || err);
+      dbEnabled = false;
+    }
+  })();
+  return dbInitializing;
 }
 
 async function saveToDb(key, value) {
