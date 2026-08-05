@@ -165,8 +165,12 @@ function syncDataFilesToRepository(relativePaths) {
     const sourcePath = path.join(DATA_DIR, fileName);
     const targetPath = path.join(REPO_DATA_DIR, fileName);
     if (fs.existsSync(sourcePath)) {
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      fs.copyFileSync(sourcePath, targetPath);
+      try {
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        fs.copyFileSync(sourcePath, targetPath);
+      } catch (e) {
+        // Read-only filesystem on serverless Lambda runtime
+      }
     }
   });
 }
@@ -558,7 +562,11 @@ app.put('/api/plots/:id', requireAdmin, async (req, res) => {
   savePlots(plots);
   savePlotDetails(details);
 
-  await persistToGitHub('plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
+  try {
+    await persistToGitHub('plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
+  } catch (gitErr) {
+    console.warn('[github-sync] Non-fatal plot update git sync warning:', gitErr.message || gitErr);
+  }
 
   res.json({ success: true, plot: plots[id] });
 });
@@ -590,7 +598,11 @@ app.put('/api/plots-bulk', requireAdmin, async (req, res) => {
   });
   
   savePlots(plots);
-  await persistToGitHub('bulk-plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
+  try {
+    await persistToGitHub('bulk-plot-update', ['data/plots.json', 'data/plot_details.json'], { timestamp: now });
+  } catch (gitErr) {
+    console.warn('[github-sync] Non-fatal bulk plot update git sync warning:', gitErr.message || gitErr);
+  }
   res.json({ success: true, plots });
 });
 
