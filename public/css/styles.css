@@ -133,6 +133,8 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -222,6 +224,7 @@ input, select, textarea {
   padding: 0 24px;
   position: relative;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -413,10 +416,11 @@ input, select, textarea {
 /* --- Main Content Layout --- */
 #main-content, #admin-main {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding-bottom: 80px; /* space for fixed footer */
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
   position: relative;
+  overflow: hidden;
 }
 
 .admin-body #admin-main {
@@ -429,6 +433,7 @@ input, select, textarea {
   position: relative;
   background: #0d1117;
   overflow: hidden;
+  min-width: 0;
 }
 
 #scene-canvas {
@@ -650,6 +655,7 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
 }
 
 .panel {
@@ -1378,6 +1384,9 @@ input, select, textarea {
   display: flex;
   align-items: center;
   padding: 0 24px;
+  flex-shrink: 0;
+  width: 100%;
+  z-index: 100;
 }
 
 .footer-content {
@@ -1407,6 +1416,18 @@ input, select, textarea {
 @media (min-width: 769px) {
   .marquee-clone {
     display: none !important;
+  }
+
+  #legend-stack {
+    display: flex;
+  }
+
+  #ticker-marquee-track {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: none !important;
+    white-space: normal;
   }
 }
 
@@ -1488,6 +1509,7 @@ input, select, textarea {
   }
 
   #canvas-container {
+    flex: none;
     height: 58%;
   }
 
@@ -1495,10 +1517,10 @@ input, select, textarea {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: env(safe-area-inset-bottom, 0) !important; /* stay above navigation bar */
+    bottom: 0 !important;
     height: auto !important;
-    min-height: 64px !important;
-    padding: 14px 16px calc(64px + env(safe-area-inset-bottom, 64px)) 16px !important;
+    min-height: 36px !important;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)) 16px !important;
     margin-bottom: 0 !important;
     background: rgba(10, 14, 23, 0.98) !important;
     border-top: 1.5px solid rgba(56, 189, 248, 0.3) !important;
@@ -1522,11 +1544,12 @@ input, select, textarea {
     flex-wrap: wrap !important;
   }
 
+  .footer-copyright .footer-call-link {
+    color: inherit !important;
+  }
+
   .footer-contact {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    font-size: 0.72rem !important;
+    display: none !important;
   }
 
   .header-contact .contact-name {
