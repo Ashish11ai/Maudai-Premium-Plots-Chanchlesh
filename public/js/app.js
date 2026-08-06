@@ -99,9 +99,12 @@
         console.warn('Location panel setup warning:', e);
       }
 
-      // 8. Default View Mode: 2D Google Map View
+      // 8. Start with 3D layout view, then auto-switch to 2D Google Map after 5 seconds
       try {
-        setViewMode('2d');
+        setViewMode('3d');
+        setTimeout(() => {
+          setViewMode('2d');
+        }, 5000);
       } catch (e) {
         console.warn('setViewMode warning:', e);
       }
@@ -143,12 +146,7 @@
       if (settings && settings.gmap && gmapManager) {
         gmapManager.setPlacementSettings(settings.gmap);
       }
-      if (settings && settings.gmap && settings.gmap.defaultView) {
-        setViewMode(settings.gmap.defaultView);
-        if (settings.gmap.defaultView === '3d' && scene) {
-          scene.set3DView();
-        }
-      }
+      // defaultView from settings is ignored — startup handles 3D→2D auto-switch
     } catch (e) {
       console.error('Failed to load overlay settings:', e);
     }

@@ -1429,6 +1429,10 @@ input, select, textarea {
     animation: none !important;
     white-space: normal;
   }
+
+  .footer-call-link {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
