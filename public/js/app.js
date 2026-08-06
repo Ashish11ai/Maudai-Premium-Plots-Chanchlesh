@@ -104,7 +104,7 @@
         setViewMode('3d');
         setTimeout(() => {
           setViewMode('2d');
-        }, 5000);
+        }, 7000);
       } catch (e) {
         console.warn('setViewMode warning:', e);
       }
