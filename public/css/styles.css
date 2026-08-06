@@ -1491,8 +1491,9 @@ input, select, textarea {
 
   #main-footer {
     height: auto !important;
-    min-height: 48px !important;
-    padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 20px)) 16px !important;
+    min-height: 56px !important;
+    padding: 14px 16px calc(32px + env(safe-area-inset-bottom, 32px)) 16px !important;
+    margin-bottom: 0 !important;
     background: rgba(10, 14, 23, 0.98) !important;
     border-top: 1.5px solid rgba(56, 189, 248, 0.3) !important;
     position: relative !important;
