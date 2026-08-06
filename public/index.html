@@ -73,7 +73,7 @@
       <!-- Permanent Branding Badge & Share Button -->
       <div class="designer-branding-container">
         <a href="tel:9407357057" class="designer-branding-badge" title="Click to call 3D Designer: 9407357057">
-          <span class="branding-icon">📞</span> 3D Designed By <b>9407357057</b>
+          <span class="branding-icon">📞</span> 3D Design by <b>9407357057</b>
         </a>
         <button id="btn-share-layout" class="designer-share-btn btn-share-action" title="Share this 3D Plot Layout">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -203,7 +203,19 @@
       <div id="plot-info-panel" class="panel hidden">
         <div class="panel-header">
           <h2 id="plot-info-title">Plot Details</h2>
-          <button id="close-plot-info" class="close-btn">&times;</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="header-share-btn btn-share-action" title="Share This Layout">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              <span>Share This Layout</span>
+            </button>
+            <button id="close-plot-info" class="close-btn">&times;</button>
+          </div>
         </div>
         <div class="plot-info-body">
           <div class="info-grid">
@@ -247,6 +259,16 @@
       <div id="plot-list-panel" class="panel">
         <div class="panel-header">
           <h2>All Plots</h2>
+          <button class="header-share-btn btn-share-action" title="Share This Layout">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>Share This Layout</span>
+          </button>
         </div>
         <div class="filter-bar">
           <button class="filter-btn active" data-filter="all">All <span class="filter-count"
@@ -273,17 +295,7 @@
   <footer id="main-footer">
     <div class="footer-content">
       <div class="footer-copyright">
-        <span>&copy; 2026 Mr. Chanchlesh Ji Sahu | Maudai Premium Plots</span>
-        <button class="footer-share-btn btn-share-action" title="Share Website Link">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="18" cy="5" r="3"></circle>
-            <circle cx="6" cy="12" r="3"></circle>
-            <circle cx="18" cy="19" r="3"></circle>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-          </svg>
-          <span>Share</span>
-        </button>
+      <span>&copy; 2026 Mr. Chanchlesh Ji Sahu | <a href="tel:9407357057" class="footer-call-link">3D Design by 9407357057</a></span>
       </div>
       <span class="footer-contact">
         <a href="tel:9407357057" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">

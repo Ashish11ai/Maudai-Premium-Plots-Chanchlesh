@@ -664,12 +664,14 @@
       });
     }
 
-    // Share buttons listener
-    document.querySelectorAll('.btn-share-action').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    // Share buttons listener (including dynamic header share buttons)
+    document.addEventListener('click', (e) => {
+      const shareBtn = e.target.closest('.btn-share-action');
+      if (shareBtn) {
         e.preventDefault();
+        e.stopPropagation();
         handleShareAction();
-      });
+      }
     });
   }
 

@@ -1843,11 +1843,13 @@
   document.addEventListener('DOMContentLoaded', () => {
     init();
     setupPasswordModal();
-    document.querySelectorAll('.btn-share-action').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+      const shareBtn = e.target.closest('.btn-share-action');
+      if (shareBtn) {
         e.preventDefault();
+        e.stopPropagation();
         handleAdminShareAction();
-      });
+      }
     });
   });
 

@@ -81,7 +81,7 @@
         <!-- Permanent Branding Badge & Share Button -->
         <div class="designer-branding-container">
           <a href="tel:9407357057" class="designer-branding-badge" title="Click to call 3D Designer: 9407357057">
-            <span class="branding-icon">📞</span> 3D Designed By <b>9407357057</b>
+            <span class="branding-icon">📞</span> 3D Design by <b>9407357057</b>
           </a>
           <button id="btn-admin-share-layout" class="designer-share-btn btn-share-action" title="Share this 3D Plot Layout">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -482,13 +482,25 @@
         <div id="plot-list-panel" class="panel">
           <div class="panel-header">
             <h2>All Plots</h2>
-            <div class="bulk-actions">
-              <select id="bulk-status-select">
-                <option value="">Bulk Action...</option>
-                <option value="available">Mark Available</option>
-                <option value="sold">Mark Sold</option>
-                <option value="reserved">Mark Reserved</option>
-              </select>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="header-share-btn btn-share-action" title="Share This Layout">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                <span>Share This Layout</span>
+              </button>
+              <div class="bulk-actions">
+                <select id="bulk-status-select">
+                  <option value="">Bulk Action...</option>
+                  <option value="available">Mark Available</option>
+                  <option value="sold">Mark Sold</option>
+                  <option value="reserved">Mark Reserved</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="filter-bar">
