@@ -185,6 +185,17 @@ app.post('/api/login', rateLimiter(loginRateMap, 5 * 60 * 1000, 10, 'Too many lo
 
 // Middleware
 app.use(bodyParser.json());
+if (isServerlessRuntime) {
+  app.get('/js/plotData.js', (req, res, next) => {
+    const tmpPlotData = path.join('/tmp', 'public', 'js', 'plotData.js');
+    if (fs.existsSync(tmpPlotData)) {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      return res.sendFile(tmpPlotData);
+    }
+    next();
+  });
+}
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
   setHeaders: (res, filePath) => {
@@ -213,8 +224,12 @@ function loadPlots() {
 }
 
 function savePlots(data) {
-  if (saveToDbCache('plots', data)) return;
-  fs.writeFileSync(PLOTS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  saveToDbCache('plots', data);
+  try {
+    fs.writeFileSync(PLOTS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Failed to write PLOTS_FILE:', e.message);
+  }
 }
 
 function syncDataFilesToRepository(relativePaths) {
@@ -286,8 +301,12 @@ function loadSettings() {
 }
 
 function saveSettings(data) {
-  if (saveToDbCache('settings', data)) return;
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  saveToDbCache('settings', data);
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Failed to write SETTINGS_FILE:', e.message);
+  }
 }
 
 // --- Auth Middleware & Stateless Token Manager ---
@@ -537,8 +556,12 @@ function loadPlotDetails() {
 }
 
 function savePlotDetails(details) {
-  if (saveToDbCache('plotDetails', details)) return;
-  fs.writeFileSync(DETAILS_FILE, JSON.stringify(details, null, 2), 'utf8');
+  saveToDbCache('plotDetails', details);
+  try {
+    fs.writeFileSync(DETAILS_FILE, JSON.stringify(details, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Failed to write DETAILS_FILE:', e.message);
+  }
 }
 
 // Get all plots (enriched with dimensions & road facing info)
@@ -677,8 +700,12 @@ function loadAssets() {
 }
 
 function saveAssets(data) {
-  if (saveToDbCache('assets', data)) return;
-  fs.writeFileSync(ASSETS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  saveToDbCache('assets', data);
+  try {
+    fs.writeFileSync(ASSETS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Failed to write ASSETS_FILE:', e.message);
+  }
 }
 
 function serializeJsLiteral(value) {
