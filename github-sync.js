@@ -132,17 +132,23 @@ function writeFileContent(relativePath, content) {
 
 function requestGitHub({ method, pathName, body, token }) {
   return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'User-Agent': 'netlify-admin-sync',
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+    if (payload) {
+      headers['Content-Type'] = 'application/json';
+      headers['Content-Length'] = Buffer.byteLength(payload);
+    }
     const req = https.request({
       hostname: 'api.github.com',
       port: 443,
       path: pathName,
       method,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json',
-        'User-Agent': 'netlify-admin-sync',
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
+      headers
     }, (res) => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
@@ -161,8 +167,8 @@ function requestGitHub({ method, pathName, body, token }) {
     });
 
     req.on('error', reject);
-    if (body) {
-      req.write(JSON.stringify(body));
+    if (payload) {
+      req.write(payload);
     }
     req.end();
   });
